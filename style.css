@@ -1,0 +1,240 @@
+/* Configurações Gerais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background-color: #eef2f7;
+}
+
+header {
+    background: #1a2a3a;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Menu Lateral */
+.sidebar {
+    width: 250px;
+    background: #2c3e50;
+    padding-top: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 15px 20px;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.sidebar ul li a:hover, .sidebar ul li a.active {
+    background: #34495e;
+    color: white;
+    border-left: 4px solid #3498db;
+}
+
+/* Área de Conteúdo */
+.content {
+    flex: 1;
+    padding: 30px;
+}
+
+/* Container dos Cards */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin: 20px 0;
+}
+
+/* Card Base */
+.stat-card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h4 {
+    color: #555;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Botões dentro dos Cards */
+.stat-card a {
+    display: block;
+    margin-top: 15px;
+    padding: 12px 20px;
+    color: white; /* Texto padrão branco para melhor leitura */
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+/* Cores por Categoria */
+.stat-card.alert { border-top: 6px solid #e74c3c; }
+.stat-card.alert a { background-color: #e74c3c; }
+.stat-card.alert a:hover { background-color: #c0392b; }
+
+.stat-card.warning { border-top: 6px solid #2ecc71; }
+.stat-card.warning a { background-color: #2ecc71; }
+.stat-card.warning a:hover { background-color: #27ae60; }
+
+.stat-card.contGO { border-top: 6px solid #008dff; }
+.stat-card.contGO a { background-color: #008dff; }
+.stat-card.contGO a:hover { background-color: #0076d6; }
+
+.stat-card.contPO { border-top: 6px solid #8862d7; }
+.stat-card.contPO a { background-color: #8862d7; }
+.stat-card.contPO a:hover { background-color: #7249c5; }
+
+.stat-card.success { border-top: 6px solid #ffde23; }
+.stat-card.success a { background-color: #ffde23; color: #333; } /* Amarelo pede texto escuro */
+.stat-card.success a:hover { background-color: #e5c71f; }
+
+.stat-card.rh24hs { border-top: 6px solid #ff710a; }
+.stat-card.rh24hs a { background-color: #ff710a; }
+.stat-card.rh24hs a:hover { background-color: #e66200; }
+
+.stat-card.teams { border-top: 6px solid #7f4030; }
+.stat-card.teams a { background-color: #7f4030; }
+.stat-card.teams a:hover { background-color: #6a3528; }
+
+.stat-card.erp { border-top: 6px solid #107f82; }
+.stat-card.erp a { background-color: #107f82; }
+.stat-card.erp a:hover { background-color: #0d686b; }
+
+.stat-card.sei { border-top: 6px solid #807c93; }
+.stat-card.sei a { background-color: #807c93; }
+.stat-card.sei a:hover { background-color: #807c93; }
+
+.stat-card.bmg { border-top: 6px solid #ff9096; }
+.stat-card.bmg a { background-color: #ff9096; }
+.stat-card.bmg a:hover { background-color: #ff9096; }
+
+/* Estilização da Seção de Padrões O.S */
+.card-interno {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+.padrao-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-left: 5px solid #1a2a3a;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+
+.padrao-item strong {
+    color: #1a2a3a;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.padrao-item p {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+}
+
+/* Botões de Ação Geral */
+.btn-action, .btn-copy {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    background: #3498db;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn-copy {
+    background: #27ae60;
+    padding: 8px 15px;
+    font-size: 0.8rem;
+}
+
+.btn-copy:hover { background: #219150; }
+
+.btn-action.secondary {
+    background: #95a5a6;
+    margin-top: 20px;
+}
+
+.btn-action:hover {
+    filter: brightness(1.1);
+}
+
+/* Configuração do item pai */
+.dropdown {
+    position: relative;
+}
+
+/* Estilo da lista de subitens */
+.dropdown-content {
+    display: none; /* Esconde por padrão */
+    background-color: #34495e; /* Tom levemente diferente do menu */
+    list-style: none;
+    padding-left: 15px; /* Recuo para parecer subitem */
+}
+
+/* Mostra os subitens quando o mouse passa por cima (hover) */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Estilo dos links de dentro do subitem */
+.dropdown-content li a {
+    padding: 10px 20px !important;
+    font-size: 0.85rem;
+    color: #ecf0f1 !important;
+    border-left: 2px solid #3498db;
+}
+
+.dropdown-content li a:hover {
+    background: #1abc9c !important; /* Cor de destaque ao selecionar o manual */
+    border-left: 4px solid #fff;
+}
+

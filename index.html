@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEMA - CAJAMAR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">SEMA<strong>CAJAMAR</strong></div>
+        <div class="user-info">Bem-vindo. | <a href="#">Sair</a></div>
+    </header>
+
+    <main class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" onclick="mostrarPainel('home')">Painel Principal</a></li>
+                    <li><a href="javascript:void(0)" id="btn-padroes" onclick="mostrarPainel('painel-padroes')">Descrição longa O.S</a></li>
+                    <li><a href="#">Inventário de Peças / Estoque</a></li>
+                    <li class="dropdown">
+    <a href="javascript:void(0)" class="dropbtn">Manuais Técnicos ▼</a>
+    <ul class="dropdown-content">
+        <li><a href="https://correiosbrasil-my.sharepoint.com/my?viewid=a2f96f4f%2D2ec6%2D45f5%2D843f%2Da682afa27e39&login_hint=LUISCARLOSRODRIGUES%40correios%2Ecom%2Ebr&source=waffle&id=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO%2FA20130035%20%2D%20Cajamar%20Large%20%2D%20AS%20BUILT%20%2D%2020170130%2Epdf&parent=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO" target="_blank">Manual Máquina GO</a></li>
+        <li><a href="https://correiosbrasil-my.sharepoint.com/my?viewid=a2f96f4f%2D2ec6%2D45f5%2D843f%2Da682afa27e39&login_hint=LUISCARLOSRODRIGUES%40correios%2Ecom%2Ebr&source=waffle&id=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO%2FA20130035%20%2D%20Cajamar%20Small%20%2D%20Installation%20V2%2E4%20ENG%2D1%2E4%2Epdf&parent=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO" target="_blank">Manual Máquina PO</a></li>
+        <li><a href="https://correiosbrasil-my.sharepoint.com/my?viewid=a2f96f4f%2D2ec6%2D45f5%2D843f%2Da682afa27e39&login_hint=LUISCARLOSRODRIGUES%40correios%2Ecom%2Ebr&source=waffle&id=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO%2FIP%20Address%20Cajamar%20Large%2Epdf&parent=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO" target="_blank">Endereços IP GO</a></li>
+        <li><a href="https://correiosbrasil-my.sharepoint.com/my?viewid=a2f96f4f%2D2ec6%2D45f5%2D843f%2Da682afa27e39&login_hint=LUISCARLOSRODRIGUES%40correios%2Ecom%2Ebr&source=waffle&id=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO%2FCajamarSm%5FIpAddresses%2Epdf&parent=%2Fpersonal%2Fluiscarlosrodrigues%5Fcorreios%5Fcom%5Fbr%2FDocuments%2FManuais%5FGO%5FPO" target="_blank">Endereço IP PO</a></li>
+    </ul>
+</li>
+                    <li><a href="https://correiosbrasil-my.sharepoint.com/:x:/r/personal/luisgustavo_correios_com_br/_layouts/15/Doc.aspx?sourcedoc=%7B05EE68A4-EB88-44DD-8035-F0717EDC9221%7D&file=Controle%20de%20Folgas%20-%20SEMA.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1&web=1" target="_blank" rel="noopener noreferrer">Controle de Folgas</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <section class="content">
+            <div id="home">
+                <h2>Painel de Controle</h2>
+                <div class="stats-cards">
+                    <div class="stat-card alert">
+                        <h4>GO</h4>
+                        <a href="http://10.198.76.26/Terminal/Scada/4463033f-7b1e-430e-a4cf-a6db00fb49f2" target="_blank" rel="noopener noreferrer">Máquina GO</a>
+                    </div>
+                    <div class="stat-card warning">
+                        <h4>PO</h4>
+                        <a href="http://10.198.76.151/Terminal/MainDashboard/BrazilianPost/CrossBelt/Dashboard/15a71db3-64a3-4bd7-9f2b-a7f2006b7877" target="_blank" rel="noopener noreferrer">Máquina PO</a>
+                    </div>
+                    <div class="stat-card success">
+                        <h4>SRP Correios</h4>
+                        <a href="https://srp.correios.com.br/registrodeponto/login.jsf" target="_blank" rel="noopener noreferrer">Registro de Ponto</a>
+                    </div>
+                    <div class="stat-card contGO">
+                        <h4>Contador GO</h4>
+                        <a href="http://10.198.76.25/sqa/" target="_blank" rel="noopener noreferrer">Contador</a>
+                    </div>
+                    <div class="stat-card contPO">
+                        <h4>Contador PO</h4>
+                        <a href="http://10.198.76.150/sqa/" target="_blank" rel="noopener noreferrer">Contador</a>
+                    </div>
+                    <div class="stat-card rh24hs">
+                        <h4>RH 24Hs</h4>
+                        <a href="https://rh24horas.correios.com.br/populis/seguranca/login-rh24-frame.do" target="_blank" rel="noopener noreferrer">RH 24 horas</a>
+                    </div>
+                    <div class="stat-card teams">
+                        <h4>Teams</h4>
+                        <a href="https://teams.microsoft.com/v2/" target="_blank" rel="noopener noreferrer">Teams</a>
+                    </div>
+                    <div class="stat-card erp">
+                        <h4>ERP CORREIOS</h4>
+                        <a href="https://erp.correios.com.br/jde/E1Menu.maf" target="_blank" rel="noopener noreferrer">Ordens de Serviços</a>
+                    </div>
+                    <div class="stat-card sei">
+                        <h4>Sei Correios</h4>
+                        <a href="https://sei.correios.com.br/sip/login.php?sigla_orgao_sistema=CORREIOS&sigla_sistema=SEI&infra_url=L3NlaS8=" target="_blank" rel="noopener noreferrer">Sei</a>
+                    </div>
+                    <div class="stat-card bmg">
+                        <h4>Help Desk</h4>
+                        <a href="https://itsm.correios.com.br/arsys/shared/login.jsp?/arsys/" target="_blank" rel="noopener noreferrer">Help Desk</a>
+                    </div>
+                </div>
+
+                <h3>Ações Rápidas</h3>
+                <div class="action-buttons">
+                <a href="bwu-carretas.html"target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+                <button class="btn-action">+ Controle Instalação/Remoção BWU e Carretas</button>
+                </a>
+
+                </div>
+
+                </div>
+
+
+            <div id="painel-padroes" style="display: none;">
+                <h2>Padrões de Descrição Longa O.S</h2>
+                <div class="card-interno">
+                    <div class="padrao-item">
+                        <strong>Acompanhamento Operacional / O.S Tipo Z:</strong>
+                        <p id="txt-corretiva">ACOMPANHAMENTO OPERACIONAL DÁS 06:00 ÁS 15:00. 1- SEM FATOS RELEVANTES.  EXECUTANTE: WENDEL/LUIS CARLOS.</p>
+                        <button class="btn-copy" onclick="copiarTexto('txt-corretiva')">Copiar</button>
+                    </div>
+                    <div class="padrao-item">
+                        <strong>Preventiva GO Completa/ O.S Tipo 6:</strong>
+                        <p id="txt-preventiva">A ROTINA DE MANUTENÇÃO PREVENTIVA S1 CUJA DESCRIÇÃO COMPLETA ENCONTRA-SE NO LINK https://correiosbrasil-my.sharepoint.com/:f:/g/personal/luisgustavo_correios_com_br/Egbtl5BVgilFqssYk_4GonwB-hd0vo6cGxlxl_HiIvzwiQ?e=KvWtGd FOI EXECUTADA INTEGRALMENTE DURANTE O PERÍODO DE 06:00 ÀS 10:00.  A ROTINA DE LIMPEZA SEGUIU A PROGRAMAÇÃO ESTABELECIDA EM CONTRATO.</p>
+                        <button class="btn-copy" onclick="copiarTexto('txt-preventiva')">Copiar</button>
+                    </div>
+                    <div class="padrao-item">
+                            <strong>Preventiva GO Parcial / O.S Tipo 6:</strong>
+                            <p id="txt-preventiva-parcial">A ROTINA DE MANUTENÇÃO PREVENTIVA S1 CUJA DESCRIÇÃO COMPLETA ENCONTRA-SE NO LINK https://correiosbrasil-my.sharepoint.com/:f:/g/personal/luisgustavo_correios_com_br/Egbtl5BVgilFqssYk_4GonwB-hd0vo6cGxlxl_HiIvzwiQ?e=KvWtGd FOI EXECUTADA PARCIALMENTE (APENAS INSPEÇÃO VISUAL DAS INDUÇÕES E TOMBADORES) UMA VEZ QUE O EQUIPAMENTO NÃO FOI DISPONIBILIZADO PARA A SEMA. A ROTINA DE LIMPEZA RESUMIU-SE À LIMPEZA BÁSICA DOS POSTOS DE TRABALHO.</p>
+                            <button class="btn-copy" onclick="copiarTexto('txt-preventiva-parcial')">Copiar</button>
+                    </div>
+                    <div class="padrao-item">
+                            <strong>Preventiva PO Completa / O.S Tipo 6:</strong>
+                            <p id="txt-preventivaPO-completa">A ROTINA DE MANUTENÇÃO PREVENTIVA S1 CUJA DESCRIÇÃO COMPLETA ENCONTRA-SE NO LINK https://correiosbrasil-my.sharepoint.com/:f:/g/personal/luisgustavo_correios_com_br/EpIRGHthSrJBlIg0HrZd3ZwBqToutQ7MNEMXj5Z6Dj5oZA?e=GAvBot FOI EXECUTADA INTEGRALMENTE DURANTE O PERÍODO DE 09:00 ÀS 13:00.  A ROTINA DE LIMPEZA SEGUIU A PROGRAMAÇÃO ESTABELECIDA EM CONTRATO.</p>
+                            <button class="btn-copy" onclick="copiarTexto('txt-preventivaPO-completa')">Copiar</button>
+                    </div>
+                    <div class="padrao-item">
+                            <strong>Preventiva PO Parcial / O.S Tipo 6:</strong>
+                            <p id="txt-preventivaPO-parcial">A ROTINA DE MANUTENÇÃO PREVENTIVA S1 CUJA DESCRIÇÃO COMPLETA ENCONTRA-SE NO LINK https://correiosbrasil-my.sharepoint.com/:f:/g/personal/luisgustavo_correios_com_br/EpIRGHthSrJBlIg0HrZd3ZwBqToutQ7MNEMXj5Z6Dj5oZA?e=GAvBot FOI EXECUTADA PARCIALMENTE (APENAS INSPEÇÃO VISUAL DAS INDUÇÕES E TOMBADORES) UMA VEZ QUE O EQUIPAMENTO NÃO FOI DISPONIBILIZADO PARA A SEMA. A ROTINA DE LIMPEZA RESUMIU-SE À LIMPEZA BÁSICA DOS POSTOS DE TRABALHO.</p>
+                            <button class="btn-copy" onclick="copiarTexto('txt-preventivaPO-parcial')">Copiar</button>
+                    </div>
+                    <div class="padrao-item">
+                            <strong>Corretiva Modelo / O.S Tipo 0:</strong>
+                            <p id="txt-corretiva-modelo">FOI DETECTADO FALHA NO (A)XXXXXXXX EM FUNÇÃO DE (A) XXXXXXXXXXX. PARA CORREÇÃO FOI EXECUTADO A SEGUINTE INTERVENÇÃO: XXXXXXXXXX. FOI NECESSÁRIO A SUBSTITUIÇÃO DA(S) SEGUINTE(S) PEÇA (S):DESCRIÇÃO: XXXXXXXXX/PN:/XXXXXXXXX/QTDE:/ XXXXXXXXXX</p>
+                            <button class="btn-copy" onclick="copiarTexto('txt-corretiva-modelo')">Copiar</button>
+                    </div>
+                    </div>
+                <button onclick="mostrarPainel('home')" class="btn-action secondary">Voltar ao Painel</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function mostrarPainel(id) {
+            // Esconde todas as seções
+            document.getElementById('home').style.display = 'none';
+            document.getElementById('painel-padroes').style.display = 'none';
+
+            // Mostra a seção desejada
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function copiarTexto(id) {
+            const texto = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("Texto copiado para a área de transferência!");
+            });
+        }
+    </script>
+</body>
+</html>
