@@ -145,6 +145,10 @@ header {
 .stat-card.bmg a { background-color: #ff9096; }
 .stat-card.bmg a:hover { background-color: #ff9096; }
 
+.stat-card.outlook { border-top: 6px solid #91aeff; }
+.stat-card.outlook a { background-color: #91aeff; }
+.stat-card.outlook a:hover { background-color: #91aeff; }
+
 /* Estilização da Seção de Padrões O.S */
 .card-interno {
     background: white;

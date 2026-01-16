@@ -1,1346 +1,330 @@
-
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Controle Instalação/Remoção - BWU e Carretas (Usuários & Log)</title>
-  <style>
-   :root{
-    --c1:#1f6feb;
-    --c2:#0ea5e9;
-
-    /* TEMA CLARO (mantido) */
-    --bg:#f4f6f8;
-    --card:#ffffff;
-    --muted:#6b7280;
-    --border:#d0d5dc;
-    --ink:#1f2937;
-
-    --ok:#22c55e;
-    --warn:#f59e0b;
-    --danger:#ef4444;
-
-    /* NOVO: tipografia fluida (clamp) */
-    --fs-1: clamp(18px, 1.2vw + 12px, 22px);   /* h3 / botões maiores */
-    --fs-2: clamp(16px, 1vw + 10px, 20px);     /* corpo padrão */
-    --fs-3: clamp(14px, 0.8vw + 9px, 18px);    /* rótulos/ajuda */
-  }
-
-  *{ box-sizing:border-box; }
-  html, body{ height:100%; }
-  body{
-    margin:0; padding:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    font-size: var(--fs-2);         /* NOVO: tamanho base fluido */
-    line-height: 1.4;
-  }
-
-  .container{
-    max-width:1200px;
-    margin:0 auto;
-    padding: 16px 16px;             /* NOVO: padding reduzido em mobile */
-  }
-
-  /* TOP BAR */
-  .topbar{
-    background:#ffffff;
-    border-bottom:1px solid var(--border);
-    padding:10px 12px;
-    display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:10;
-    box-shadow:0 2px 5px rgba(0,0,0,0.05);
-    gap: 8px;                       /* NOVO */
-  }
-
-  .brand{ display:flex; gap:10px; align-items:center; font-weight:700; color:#374151; }
-  .brand > span { font-size: var(--fs-1); }    /* NOVO: título com clamp */
-
-  .brand .tag{
-    font-size:.80rem;
-    background:#e5e7eb; color:#374151; padding:3px 8px; border-radius:6px;
-    white-space: nowrap;
-  }
-
-  .userbox{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; } /* NOVO: wrap em telas pequenas */
-  .role-badge{ padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:#e5e7eb; color:#374151; font-size:.8rem; }
-
-  .btn{
-    padding:10px 14px;               /* NOVO: toque maior */
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:#ffffff; color:var(--ink);
-    cursor:pointer; transition:0.2s;
-    font-size: var(--fs-2);          /* fluido */
-  }
-  .btn:hover{ background:#f0f2f5; }
-  .btn.primary{ background:var(--c1); border:none; color:white; }
-  .btn.success{ background:var(--ok); border:none; color:white; }
-  .btn.warn{ background:var(--warn); border:none; color:white; }
-  .btn.danger{ background:var(--danger); border:none; color:white; }
-  .btn:disabled{ opacity:.6; cursor:not-allowed; }
-
-  .nav{ display:flex; gap:8px; flex-wrap:wrap; } /* NOVO: wrap */
-  .sep{ width:1px; background:var(--border); height:26px; }
-
-  h1,h2,h3{ margin:0 0 12px; color:#1f2937; }
-  h2{ font-size: calc(var(--fs-1) + 2px); }
-  h3{ font-size: var(--fs-1); }
-
-  .action-buttons{ display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 24px; }
-  .btn-action{
-    background: var(--c1); color:white; border:none;
-    padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:600;
-    box-shadow:0 4px 14px rgba(31,111,235,.25);
-    font-size: var(--fs-2);
-  }
-  .btn-action.secondary{ background: var(--c2); }
-
-  .sheet{
-    background: var(--card);
-    border:1px solid var(--border);
-    border-radius: 16px;             /* NOVO: raio maior */
-    padding: 16px;
-    margin-bottom: 20px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.05);
-  }
-
-  .hidden{ display:none !important; }
-
-  .row{ display:flex; gap:12px; flex-wrap:wrap; }
-
-  .form-card{
-    flex:1 1 480px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:12px;
-    background:#ffffff;
-    box-shadow:0 1px 3px rgba(0,0,0,0.04);
-  }
-
-  .form-grid{
-    display:grid;
-    grid-template-columns: repeat(2, minmax(200px, 1fr)); /* NOVO: colunas mais largas */
-    gap:12px;
-  }
-
-  .field{ display:flex; flex-direction:column; gap:6px; }
-  label{ font-size: var(--fs-3); color:#374151; }
-
-  input, select{
-    padding:12px;                    /* NOVO: toque maior */
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:#f0f2f5;
-    color:#1f2937;
-    font-size: var(--fs-2);
-  }
-
-  /* TABELA: padrão (desktop/tablet) */
-  .table-wrap{ width:100%; overflow:auto; }     /* NOVO: wrapper com scroll horizontal */
-  table{ width:100%; border-collapse: collapse; margin-top:12px; font-size:.95rem; }
-  th, td{ border-bottom:1px solid var(--border); padding:10px; text-align:left; }
-  th{ background:#f3f4f6; color:#374151; position:sticky; top:0; z-index:1; }
-  .table-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-  .section-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-
-  .muted{ color: var(--muted); font-size: var(--fs-3); }
-
-  .tag{
-    display:inline-block; padding:6px 10px; border-radius:999px;
-    background:#e5e7eb; color:#374151; font-size:.85rem; border:1px solid var(--border);
-  }
-
-  .footer{ margin-top:22px; display:flex; gap:12px; align-items:center; }
-
-  .msg{ font-size:.9rem; }
-  .msg.ok{ color: var(--ok); }
-  .msg.err{ color: var(--danger); }
-
-  /* FILTROS */
-  .filters{
-    background:#ffffff; border:1px solid var(--border); border-radius:16px; padding:12px; margin:18px 0;
-    box-shadow:0 1px 3px rgba(0,0,0,0.04);
-  }
-  .filters-grid{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
-    gap:12px;
-  }
-  .pill{
-    border:1px dashed var(--border); background:#eef0f3; color:#374151;
-    border-radius:999px; padding:6px 10px; font-size:.85rem;
-  }
-
-  /* MODAL */
-  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:99; }
-  .modal{ width:min(520px, 92vw); background:#ffffff; border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-  .modal h3{ margin-bottom:8px; color:#1f2937; }
-
-  /* ============ BREAKPOINTS ============ */
-
-  /* 📱 Mobile (até 640px) */
-  @media (max-width: 640px){
-    .container{ padding: 12px; }
-    .topbar{ flex-wrap: wrap; gap: 10px; }
-    .nav{ width:100%; order:3; justify-content:flex-start; }
-    .userbox{ width:100%; order:2; justify-content:flex-start; }
-    .brand{ order:1; }
-
-    .form-grid{
-      grid-template-columns: 1fr;        /* forms em uma coluna */
-    }
-
-    /* Tabelas como cartões empilhados (legibilidade no celular) */
-    table, thead, tbody, th, td, tr{ display:block; }
-    thead{ display:none; }
-    table{ border:0; }
-    tbody tr{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      margin-bottom:12px;
-      background:#fff;
-      box-shadow:0 1px 2px rgba(0,0,0,0.04);
-    }
-    td{
-      border:0; padding:6px 0;
-    }
-    /* Rótulos sintetizados via data-attr (ver JS/HTML abaixo) */
-    td[data-label]::before{
-      content: attr(data-label) ": ";
-      font-weight:600; color:#374151; margin-right:6px;
-      display:inline-block; min-width: 120px;
-    }
-
-    .btn, .btn-action{ width: 100%; }  /* toque facilitado no mobile */
-    .section-actions{ flex-direction:column; }
-  }
-
-  /* 📗 Tablet (641–1024px) */
-  @media (min-width: 641px) and (max-width: 1024px){
-    .container{ padding: 16px; }
-    .form-grid{ grid-template-columns: repeat(2, minmax(220px,1fr)); }
-    .row{ gap:16px; }
-    .table-wrap{ overflow:auto; } /* scroll horizontal se necessário */
-  }
-
-  /* 💻 Desktop (≥ 1025px) */
-  @media (min-width: 1025px){
-    .container{ padding: 20px 24px; }
-    .form-grid{ grid-template-columns: repeat(2, minmax(240px,1fr)); }
-    .row{ gap:18px; }
-  }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão BWU & Carretas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary-color: #2c3e50; --secondary-color: #34495e; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .login-container { max-width: 400px; margin: 100px auto; }
+        #app-content { display: none; padding: 20px; }
+        .nav-tabs .nav-link { color: var(--secondary-color); font-weight: 600; cursor: pointer; }
+        .nav-tabs .nav-link.active { border-bottom: 3px solid #0d6efd; color: #0d6efd; }
+        .table-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-add { height: 38px; font-weight: bold; }
+        .is-invalid { border-color: #dc3545 !important; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .editing-mode { background-color: #fff3cd !important; border: 2px solid #ffca2c !important; }
+    </style>
 </head>
 <body>
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="brand">
-      <span>Controle BWU & Carretas</span>
-      <span class="tag">com Usuários & Auditoria</span>
+
+<div id="auth-section" class="login-container">
+    <div class="card shadow border-0">
+        <div class="card-body p-4">
+            <h3 class="text-center mb-4">Acesso ao Sistema</h3>
+            <div class="mb-3">
+                <label class="form-label">E-mail</label>
+                <input type="email" id="login-email" class="form-control" placeholder="admin@empresa.com">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Senha</label>
+                <input type="password" id="login-pass" class="form-control" placeholder="******">
+            </div>
+            <button class="btn btn-primary w-100" id="btn-login">Entrar</button>
+        </div>
     </div>
-    <div class="nav">
-      <button id="navToggleBWU" class="btn">BWU</button>
-      <button id="navToggleCar" class="btn">Carretas</button>
-      <div class="sep"></div>
-      <button id="navToggleAdmin" class="btn">Administração</button>
-    </div>
-    <div class="userbox">
-      <span id="currentUserName">Não autenticado</span>
-      <span id="currentUserRole" class="role-badge">—</span>
-      <button id="btnLogin" class="btn primary">Entrar</button>
-      <button id="btnLogout" class="btn warn hidden">Sair</button>
-    </div>
-  </div>
+</div>
 
-  <div class="container">
-    <h3>Ações Rápidas</h3>
-    <div class="action-buttons">
-      <button class="btn-action" id="btnBWU">+ Controle Instalação/Remoção BWU</button>
-      <button class="btn-action secondary" id="btnCarretas">+ Controle Instalação/Remoção Carretas</button>
+<div id="app-content" class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Monitoramento de Equipamentos</h2>
+        <div>
+            <span id="user-display" class="me-3 text-muted small"></span>
+            <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sair</button>
+        </div>
     </div>
 
-    <!-- 🔎 FILTROS GERAIS -->
-    <section class="filters" aria-label="Filtros e Busca">
-      <h3>Filtros & Busca</h3>
-      <div class="filters-grid">
-        <div class="field">
-          <label for="fDataIni">Data - De</label>
-          <input type="date" id="fDataIni" />
-        </div>
-        <div class="field">
-          <label for="fDataFim">Data - Até</label>
-          <input type="date" id="fDataFim" />
-        </div>
-        <div class="field">
-          <label for="fBusca">Busca livre (texto)</label>
-          <input id="fBusca" placeholder="Ex.:Carreta 35, MCP1 50K0." />
+    <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-inst-bwu" onclick="cancelEdit()">Instalação BWU</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rem-bwu" onclick="cancelEdit()">Remoção BWU</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-inst-carretas" onclick="cancelEdit()">Instalação Carretas</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rem-carretas" onclick="cancelEdit()">Remoção Carretas</button></li>
+    </ul>
+
+    <div class="tab-content table-container">
+
+        <div class="tab-pane fade show active" id="tab-inst-bwu">
+            <div class="row g-2 mb-4" id="form-inst_bwu">
+                <div class="col-md-3"><input type="text" id="f-ib-serie" class="form-control" placeholder="Nº Série"></div>
+                <div class="col-md-2"><input type="date" id="f-ib-data" class="form-control"></div>
+                <div class="col-md-3"><input type="text" id="f-ib-maq" class="form-control" placeholder="Máquina"></div>
+                <div class="col-md-2"><input type="text" id="f-ib-pos" class="form-control" placeholder="Posição"></div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button class="btn btn-success w-100 btn-add" id="btn-save-inst_bwu" onclick="saveData('inst_bwu')">Salvar</button>
+                    <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-inst_bwu" onclick="cancelEdit()">✖</button>
+                </div>
+            </div>
+            <div class="header-actions">
+                <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-ib')">
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('inst_bwu')">📥 Exportar CSV</button>
+            </div>
+            <table class="table table-hover" id="t-ib">
+                <thead><tr><th>Série</th><th>Data</th><th>Máquina</th><th>Posição</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
 
-        <div class="field">
-          <label for="fMaquina">Máquina </label>
-          <input id="fMaquina" placeholder="Ex.: PO ou GO" />
-        </div>
-        <div class="field">
-          <label for="fCarreta">Carreta</label>
-          <input id="fCarreta" placeholder="Ex.:CJ25" />
-        </div>
-        <div class="field">
-          <label for="fFalha">Falha (Remoções)</label>
-          <input id="fFalha" placeholder="Ex.:Carreta amassada,Falha 1.40..." />
-        </div>
-      </div>
-      <div class="filters-actions">
-        <button class="btn primary" id="btnAplicarFiltros">Aplicar filtros</button>
-        <button class="btn warn" id="btnLimparFiltros">Limpar filtros</button>
-        <span class="pill" id="resumoFiltros"></span>
-      </div>
-      <p class="muted">Os filtros são aplicados às quatro tabelas. Combine período, máquina, carreta, falha e busca livre.</p>
-    </section>
-
-    <!-- PLANILHA BWU -->
-    <section id="sheetBWU" class="sheet hidden" aria-label="Controle BWU">
-      <h2>Controle Instalação/Remoção BWU <span class="tag">BWU</span></h2>
-      <p class="muted">Use a barra de filtros para localizar registros. Permissões conforme o perfil.</p>
-
-      <div class="row">
-        <!-- Instalação BWU -->
-        <div class="form-card" id="bwuInstalacaoCard">
-          <h3>Instalação (BWU)</h3>
-          <form id="formBwuInstalacao" class="form-grid" autocomplete="off">
-            <div class="field">
-              <label for="bwuI_numeroSerie">Número de série *</label>
-              <input id="bwuI_numeroSerie" required placeholder="Ex.: 021511..." />
+        <div class="tab-pane fade" id="tab-rem-bwu">
+            <div class="row g-2 mb-4" id="form-rem_bwu">
+                <div class="col-md-2"><input type="text" id="f-rb-serie" class="form-control" placeholder="Nº Série"></div>
+                <div class="col-md-2"><input type="date" id="f-rb-data" class="form-control"></div>
+                <div class="col-md-2"><input type="text" id="f-rb-maq" class="form-control" placeholder="Máquina"></div>
+                <div class="col-md-2"><input type="text" id="f-rb-pos" class="form-control" placeholder="Posição"></div>
+                <div class="col-md-2"><input type="text" id="f-rb-falha" class="form-control" placeholder="Falha"></div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button class="btn btn-success w-100 btn-add" id="btn-save-rem_bwu" onclick="saveData('rem_bwu')">Salvar</button>
+                    <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-rem_bwu" onclick="cancelEdit()">✖</button>
+                </div>
             </div>
-            <div class="field">
-              <label for="bwuI_data">Data *</label>
-              <input id="bwuI_data" type="date" required />
+            <div class="header-actions">
+                <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-rb')">
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('rem_bwu')">📥 Exportar CSV</button>
             </div>
-            <div class="field">
-              <label for="bwuI_maquina">Máquina *</label>
-              <input id="bwuI_maquina" required placeholder="Ex.: PO ou GO" />
-            </div>
-            <div class="field">
-              <label for="bwuI_posicao">Posição *</label>
-              <input id="bwuI_posicao" required placeholder="Ex.: MCP1 50k0." />
-            </div>
-            <div class="section-actions" style="grid-column: 1 / -1;">
-              <button class="btn primary" type="submit" data-perm="add">Salvar registro</button>
-              <button class="btn" type="button" id="exportBwuInstCSV">Exportar CSV (Instalação)</button>
-              <button class="btn warn" type="button" id="clearBwuInst" data-perm="clearAll">Limpar registros</button>
-              <span class="msg" id="msgBwuInst"></span>
-            </div>
-          </form>
-          <table id="tableBwuInst">
-            <thead>
-              <tr>
-                <th>Número de série</th>
-                <th>Data</th>
-                <th>Máquina</th>
-                <th>Posição</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+            <table class="table table-hover" id="t-rb">
+                <thead><tr><th>Série</th><th>Data</th><th>Máquina</th><th>Posição</th><th>Falha</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
 
-        <!-- Remoção BWU -->
-        <div class="form-card" id="bwuRemocaoCard">
-          <h3>Remoção (BWU)</h3>
-          <form id="formBwuRemocao" class="form-grid" autocomplete="off">
-            <div class="field">
-              <label for="bwuR_numeroSerie">Número de série *</label>
-              <input id="bwuR_numeroSerie" required placeholder="Ex.: 021511..." />
+        <div class="tab-pane fade" id="tab-inst-carretas">
+            <div class="row g-2 mb-4" id="form-inst_carretas">
+                <div class="col-md-3"><input type="text" id="f-ic-carreta" class="form-control" placeholder="Carreta"></div>
+                <div class="col-md-2"><input type="date" id="f-ic-data" class="form-control"></div>
+                <div class="col-md-3"><input type="text" id="f-ic-maq" class="form-control" placeholder="Máquina"></div>
+                <div class="col-md-2"><input type="text" id="f-ic-pos" class="form-control" placeholder="Posição"></div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button class="btn btn-success w-100 btn-add" id="btn-save-inst_carretas" onclick="saveData('inst_carretas')">Salvar</button>
+                    <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-inst_carretas" onclick="cancelEdit()">✖</button>
+                </div>
             </div>
-            <div class="field">
-              <label for="bwuR_data">Data *</label>
-              <input id="bwuR_data" type="date" required />
+            <div class="header-actions">
+                <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-ic')">
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('inst_carretas')">📥 Exportar CSV</button>
             </div>
-            <div class="field">
-              <label for="bwuR_maquina">Máquina *</label>
-              <input id="bwuR_maquina" required placeholder="Ex.: PO ou GO" />
-            </div>
-            <div class="field">
-              <label for="bwuR_posicao">Posição *</label>
-              <input id="bwuR_posicao" required placeholder="Ex.: MCP1 50k0." />
-            </div>
-            <div class="field">
-              <label for="bwuR_falha">Falha (motivo da remoção)</label>
-              <input id="bwuR_falha" placeholder="Ex.: Falha 1.40" />
-            </div>
-            <div class="section-actions" style="grid-column: 1 / -1;">
-              <button class="btn primary" type="submit" data-perm="add">Salvar registro</button>
-              <button class="btn" type="button" id="exportBwuRemCSV">Exportar CSV (Remoção)</button>
-              <button class="btn warn" type="button" id="clearBwuRem" data-perm="clearAll">Limpar registros</button>
-              <span class="msg" id="msgBwuRem"></span>
-            </div>
-          </form>
-          <table id="tableBwuRem">
-            <thead>
-              <tr>
-                <th>Número de série</th>
-                <th>Data</th>
-                <th>Máquina</th>
-                <th>Posição</th>
-                <th>Falha</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="footer">
-        <button class="btn success" id="saveBwuStorage">Salvar no navegador (BWU)</button>
-      </div>
-    </section>
-
-    <!-- PLANILHA CARRETAS -->
-    <section id="sheetCarretas" class="sheet hidden" aria-label="Controle Carretas">
-      <h2>Controle Instalação/Remoção Carretas <span class="tag">Carretas</span></h2>
-      <p class="muted">Permissões conforme o perfil. Exclua linhas com cuidado.</p>
-
-      <div class="row">
-        <!-- Instalação Carretas -->
-        <div class="form-card" id="carInstCard">
-          <h3>Instalação (Carretas)</h3>
-          <form id="formCarInst" class="form-grid" autocomplete="off">
-            <div class="field">
-              <label for="carI_carreta">Carreta *</label>
-              <input id="carI_carreta" required placeholder="Ex.: CJ25" />
-            </div>
-            <div class="field">
-              <label for="carI_data">Data *</label>
-              <input id="carI_data" type="date" required />
-            </div>
-            <div class="field">
-              <label for="carI_posicao">Posição *</label>
-              <input id="carI_posicao" required placeholder="Ex.: 40." />
-            </div>
-            <div class="section-actions" style="grid-column: 1 / -1;">
-              <button class="btn primary" type="submit" data-perm="add">Salvar registro</button>
-              <button class="btn" type="button" id="exportCarInstCSV">Exportar CSV (Instalação)</button>
-              <button class="btn warn" type="button" id="clearCarInst" data-perm="clearAll">Limpar registros</button>
-              <span class="msg" id="msgCarInst"></span>
-            </div>
-          </form>
-          <table id="tableCarInst">
-            <thead>
-              <tr>
-                <th>Carreta</th>
-                <th>Data</th>
-                <th>Posição</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+            <table class="table table-hover" id="t-ic">
+                <thead><tr><th>Carreta</th><th>Data</th><th>Máquina</th><th>Posição</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
 
-        <!-- Remoção Carretas -->
-        <div class="form-card" id="carRemCard">
-          <h3>Remoção (Carretas)</h3>
-          <form id="formCarRem" class="form-grid" autocomplete="off">
-            <div class="field">
-              <label for="carR_carreta">Carreta *</label>
-              <input id="carR_carreta" required placeholder="Ex.: CJ25" />
+        <div class="tab-pane fade" id="tab-rem-carretas">
+            <div class="row g-2 mb-4" id="form-rem_carretas">
+                <div class="col-md-2"><input type="text" id="f-rc-carreta" class="form-control" placeholder="Carreta"></div>
+                <div class="col-md-2"><input type="date" id="f-rc-data" class="form-control"></div>
+                <div class="col-md-2"><input type="text" id="f-rc-maq" class="form-control" placeholder="Máquina"></div>
+                <div class="col-md-2"><input type="text" id="f-rc-pos" class="form-control" placeholder="Posição"></div>
+                <div class="col-md-2"><input type="text" id="f-rc-falha" class="form-control" placeholder="Falha"></div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button class="btn btn-success w-100 btn-add" id="btn-save-rem_carretas" onclick="saveData('rem_carretas')">Salvar</button>
+                    <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-rem_carretas" onclick="cancelEdit()">✖</button>
+                </div>
             </div>
-            <div class="field">
-              <label for="carR_data">Data *</label>
-              <input id="carR_data" type="date" required />
+            <div class="header-actions">
+                <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-rc')">
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('rem_carretas')">📥 Exportar CSV</button>
             </div>
-            <div class="field">
-              <label for="carR_posicao">Posição *</label>
-              <input id="carR_posicao" required placeholder="Ex.: 40." />
-            </div>
-            <div class="field">
-              <label for="carR_falha">Falha (motivo da remoção)</label>
-              <input id="carR_falha" placeholder="Ex.: Carreta amassada" />
-            </div>
-            <div class="section-actions" style="grid-column: 1 / -1;">
-              <button class="btn primary" type="submit" data-perm="add">Salvar registro</button>
-              <button class="btn" type="button" id="exportCarRemCSV">Exportar CSV (Remoção)</button>
-              <button class="btn warn" type="button" id="clearCarRem" data-perm="clearAll">Limpar registros</button>
-              <span class="msg" id="msgCarRem"></span>
-            </div>
-          </form>
-          <table id="tableCarRem">
-            <thead>
-              <tr>
-                <th>Carreta</th>
-                <th>Data</th>
-                <th>Posição</th>
-                <th>Falha</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="footer">
-        <button class="btn success" id="saveCarStorage">Salvar no navegador (Carretas)</button>
-      </div>
-    </section>
-
-    <!-- ADMINISTRAÇÃO -->
-    <section id="sheetAdmin" class="sheet hidden" aria-label="Administração">
-      <h2>Administração</h2>
-      <p class="muted">Apenas <strong>Admin</strong> tem acesso às funções desta seção.</p>
-
-      <div class="admin-grid">
-        <!-- Gestão de Usuários -->
-        <div class="form-card" id="usersCard">
-          <h3>Usuários</h3>
-          <div class="note">Perfis: <strong>admin</strong> (total), <strong>operador</strong> (inclui/exclui), <strong>visualizador</strong> (somente leitura).</div>
-          <form id="formAddUser" class="form-grid" autocomplete="off" style="margin-top:10px;">
-            <div class="field">
-              <label for="u_username">Usuário *</label>
-              <input id="u_username" required placeholder="Digite sua matrícula" />
-            </div>
-            <div class="field">
-              <label for="u_name">Nome *</label>
-              <input id="u_name" required placeholder="ex.: Luis Carlos" />
-            </div>
-            <div class="field">
-              <label for="u_role">Perfil *</label>
-              <select id="u_role">
-                <option value="visualizador">visualizador</option>
-                <option value="operador">operador</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="u_password">Senha *</label>
-              <input id="u_password" type="password" required placeholder="senha padrão: 123456" />
-            </div>
-            <div class="section-actions" style="grid-column:1 / -1;">
-              <button class="btn primary" type="submit" data-perm="manageUsers">Adicionar usuário</button>
-            </div>
-          </form>
-
-          <table id="tableUsers">
-            <thead>
-              <tr>
-                <th>Usuário</th><th>Nome</th><th>Perfil</th><th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+            <table class="table table-hover" id="t-rc">
+                <thead><tr><th>Carreta</th><th>Data</th><th>Máquina</th><th>Posição</th><th>Falha</th><th>Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
 
-        <!-- Log de Auditoria -->
-        <div class="form-card" id="auditCard">
-          <h3>Log de Auditoria</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="aDataIni">Data - De</label>
-              <input type="date" id="aDataIni" />
-            </div>
-            <div class="field">
-              <label for="aDataFim">Data - Até</label>
-              <input type="date" id="aDataFim" />
-            </div>
-            <div class="field">
-              <label for="aUser">Usuário</label>
-              <input id="aUser" placeholder="ex.: admin" />
-            </div>
-            <div class="field">
-              <label for="aAction">Ação</label>
-              <input id="aAction" placeholder="ex.: create, delete, export_csv..." />
-            </div>
-            <div class="field">
-              <label for="aScope">Escopo</label>
-              <input id="aScope" placeholder="ex.: bwuInst, carRem, users, auth" />
-            </div>
-            <div class="field">
-              <label for="aBusca">Busca livre</label>
-              <input id="aBusca" placeholder="texto livre" />
-            </div>
-          </div>
-          <div class="section-actions">
-            <button class="btn" id="btnAuditApply">Aplicar</button>
-            <button class="btn warn" id="btnAuditClear">Limpar filtros</button>
-            <button class="btn" id="btnAuditExport">Exportar CSV (Log)</button>
-          </div>
-
-          <table id="tableAudit">
-            <thead>
-              <tr>
-                <th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Escopo</th><th>Item</th><th>Detalhes</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- MODAL LOGIN / ADMIN SETUP -->
-  <div id="authModal" class="modal-backdrop hidden" aria-hidden="true">
-    <div class="modal">
-      <h3 id="authTitle">Entrar</h3>
-      <p id="authDesc" class="muted">Informe suas credenciais.</p>
-      <form id="formAuth" class="form-grid" autocomplete="off" style="margin-top:6px;">
-        <div class="field">
-          <label for="authUser">Usuário</label>
-          <input id="authUser" required />
-        </div>
-        <div class="field">
-          <label for="authPass">Senha</label>
-          <input id="authPass" type="password" required />
-        </div>
-        <div class="section-actions" style="grid-column:1 / -1;">
-          <button class="btn primary" type="submit" id="btnDoLogin">Entrar</button>
-          <button class="btn" type="button" id="btnCancelLogin">Cancelar</button>
-        </div>
-      </form>
-
-      <form id="formFirstAdmin" class="form-grid hidden" autocomplete="off" style="margin-top:6px;">
-        <div class="field">
-          <label for="faUser">Usuário (Admin) *</label>
-          <input id="faUser" required placeholder="ex.: admin" />
-        </div>
-        <div class="field">
-          <label for="faName">Nome *</label>
-          <input id="faName" required placeholder="ex.: Administrador" />
-        </div>
-        <div class="field">
-          <label for="faPass">Senha *</label>
-          <input id="faPass" type="password" required placeholder="mín. 6 caracteres" />
-        </div>
-        <div class="section-actions" style="grid-column:1 / -1;">
-          <button class="btn primary" type="submit">Criar Admin</button>
-        </div>
-      </form>
     </div>
-  </div>
+</div>
 
-  <script>
-    (function(){
-      // ---------- Estado e armazenamento ----------
-      const state = {
-        bwuInst: [], bwuRem: [], carInst: [], carRem: [],
-        users: [], audit: [],
-        currentUser: null
-      };
-      const STORAGE_KEYS = {
-        bwuInst: 'CTRL_BWU_INST',
-        bwuRem:  'CTRL_BWU_REM',
-        carInst: 'CTRL_CAR_INST',
-        carRem:  'CTRL_CAR_REM',
-        users:   'CTRL_USERS',
-        current: 'CTRL_CURRENT_USER',
-        audit:   'CTRL_AUDIT'
-      };
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-      // Permissões por perfil
-      const ROLE_PERMS = {
-        visualizador: { add:false, delete:false, clearAll:false, export:true, manageUsers:false },
-        operador:     { add:true,  delete:true,  clearAll:false, export:true, manageUsers:false },
-        admin:        { add:true,  delete:true,  clearAll:true,  export:true, manageUsers:true }
-      };
-      const can = (action) => {
-        const role = state.currentUser?.role || 'visualizador';
-        return !!ROLE_PERMS[role]?.[action];
-      };
+    const firebaseConfig = {
+        apiKey: "AIzaSyA9yZPurd9lGJjZJghUohiauTBTxPWD2Oc",
+        authDomain: "control-bwu-car.firebaseapp.com",
+        projectId: "control-bwu-car",
+        storageBucket: "control-bwu-car.firebasestorage.app",
+        messagingSenderId: "23112503310",
+        appId: "1:23112503310:web:57831fb5ffade6ef6e6c5f"
+    };
 
-      // ---------- Utilitários ----------
-      const uid = () => String(Date.now()) + Math.random().toString(16).slice(2);
-      const fmtDate = (d) => d || ''; // yyyy-mm-dd
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-      async function sha256(str){
-        const enc = new TextEncoder().encode(str);
-        const buf = await crypto.subtle.digest('SHA-256', enc);
-        return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-      }
+    // Controle de estado da edição
+    let editMode = { active: false, id: null, type: null };
 
-      function escapeCSV(v){
-        const s = (v ?? '').toString();
-        const needsQuote = /[;"\n,]/.test(s);
-        const q = '"' + s.replace(/"/g,'""') + '"';
-        return needsQuote ? q : s;
-      }
-      function exportToCSV(filename, rows, headers){
-        const headerLine = headers.map(escapeCSV).join(';');
-        const dataLines  = rows.map(r => headers.map(h => escapeCSV(r[h])).join(';'));
-        const csv = [headerLine, ...dataLines].join('\n');
-        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
-      }
+    const fieldMapping = {
+        'inst_bwu': ['f-ib-serie', 'f-ib-data', 'f-ib-maq', 'f-ib-pos'],
+        'rem_bwu': ['f-rb-serie', 'f-rb-data', 'f-rb-maq', 'f-rb-pos', 'f-rb-falha'],
+        'inst_carretas': ['f-ic-carreta', 'f-ic-data', 'f-ic-maq', 'f-ic-pos'],
+        'rem_carretas': ['f-rc-carreta', 'f-rc-data', 'f-rc-maq', 'f-rc-pos', 'f-rc-falha']
+    };
 
-      function setMsg(el, text, type='ok'){
-        el.textContent = text;
-        el.className = 'msg ' + (type === 'ok' ? 'ok' : 'err');
-        setTimeout(()=>{ el.textContent=''; el.className='msg'; }, 2600);
-      }
-
-      function sanitizeUser(u){ // para exibir/logar sem hash
-        if (!u) return null;
-        const {id, username, name, role} = u;
-        return {id, username, name, role};
-      }
-
-      // ---------- Persistência ----------
-      function loadFromStorage(){
-        for (const [k, key] of Object.entries(STORAGE_KEYS)){
-          try{
-            const val = localStorage.getItem(key);
-            if (!val) continue;
-            state[k] = JSON.parse(val);
-          }catch(e){ console.warn('Falha ao carregar', k, e); }
+    // --- AUTENTICAÇÃO ---
+    document.getElementById('btn-login').addEventListener('click', () => {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Erro: " + err.message));
+    });
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            document.getElementById('user-display').innerText = user.email;
+            initRealtimeSync();
+        } else {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('app-content').style.display = 'none';
         }
-      }
-      function saveDataSets(){
-        try{
-          localStorage.setItem(STORAGE_KEYS.bwuInst, JSON.stringify(state.bwuInst));
-          localStorage.setItem(STORAGE_KEYS.bwuRem,  JSON.stringify(state.bwuRem));
-          localStorage.setItem(STORAGE_KEYS.carInst, JSON.stringify(state.carInst));
-          localStorage.setItem(STORAGE_KEYS.carRem,  JSON.stringify(state.carRem));
-        }catch(e){ console.warn('Falha ao salvar datasets', e); }
-      }
-      function saveUsers(){
-        try{ localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(state.users)); }
-        catch(e){ console.warn('Falha ao salvar usuários', e); }
-      }
-      function saveCurrentUser(){
-        try{ localStorage.setItem(STORAGE_KEYS.current, JSON.stringify(state.currentUser ? sanitizeUser(state.currentUser) : null)); }
-        catch(e){ console.warn('Falha ao salvar usuário atual', e); }
-      }
-      function saveAudit(){
-        try{ localStorage.setItem(STORAGE_KEYS.audit, JSON.stringify(state.audit)); }
-        catch(e){ console.warn('Falha ao salvar auditoria', e); }
-      }
+    });
 
-      // ---------- Auditoria ----------
-      function audit(action, scope, itemId=null, before=null, after=null, extra={}){
-        const entry = {
-          id: uid(),
-          ts: new Date().toISOString(),
-          user: state.currentUser?.username || 'system',
-          action, scope, itemId,
-          before, after,
-          ...extra
-        };
-        state.audit.unshift(entry); // mais recente no topo
-        saveAudit();
-        renderAudit();
-      }
+    // --- SALVAR OU ATUALIZAR DADOS ---
+    window.saveData = async (type) => {
+        const ids = fieldMapping[type];
+        let hasError = false;
+        let payload = { timestamp: Date.now() };
 
-      // ---------- Filtros de dados ----------
-      const filters = { dataIni:'', dataFim:'', busca:'', maquina:'', carreta:'', falha:'' };
-      const elDataIni = document.getElementById('fDataIni');
-      const elDataFim = document.getElementById('fDataFim');
-      const elBusca   = document.getElementById('fBusca');
-      const elMaq     = document.getElementById('fMaquina');
-      const elCar     = document.getElementById('fCarreta');
-      const elFalha   = document.getElementById('fFalha');
-      const elResumo  = document.getElementById('resumoFiltros');
-
-      function applyFiltersToRows(rows, kind){
-        const f = filters;
-        const inRange = (data) => {
-          if (!data) return false;
-          if (f.dataIni && data < f.dataIni) return false;
-          if (f.dataFim && data > f.dataFim) return false;
-          return true;
-        };
-        const contains = (value, needle) => {
-          if (!needle) return true;
-          return (value ?? '').toString().toLowerCase().includes(needle.toLowerCase());
-        };
-        const rowMatches = (r) => {
-          if (f.dataIni || f.dataFim){ if (!inRange(r.data)) return false; }
-          const fullText = [r.numeroSerie,r.maquina,r.posicao,r.carreta,r.falha,r.data].filter(Boolean).join(' ').toLowerCase();
-          if (f.busca && !fullText.includes(f.busca.toLowerCase())) return false;
-          if ((kind==='bwuInst'||kind==='bwuRem') && f.maquina){ if (!contains(r.maquina,f.maquina)) return false; }
-          if ((kind==='carInst'||kind==='carRem') && f.carreta){ if (!contains(r.carreta,f.carreta)) return false; }
-          if ((kind==='bwuRem'||kind==='carRem') && f.falha){ if (!contains(r.falha,f.falha)) return false; }
-          return true;
-        };
-        const base = (f.dataIni || f.dataFim) ? rows.filter(r => r.data) : rows;
-        return base.filter(rowMatches);
-      }
-      function resumoFiltros(){
-        const parts = [];
-        if (filters.dataIni || filters.dataFim) parts.push(`Período: ${filters.dataIni || '—'} a ${filters.dataFim || '—'}`);
-        if (filters.maquina) parts.push(`Máquina: "${filters.maquina}"`);
-        if (filters.carreta) parts.push(`Carreta: "${filters.carreta}"`);
-        if (filters.falha)   parts.push(`Falha: "${filters.falha}"`);
-        if (filters.busca)   parts.push(`Busca: "${filters.busca}"`);
-        elResumo.textContent = parts.length ? parts.join(' • ') : 'Sem filtros aplicados';
-      }
-
-      // ---------- Renderização de tabelas ----------
-      const tbBwuInst = document.querySelector('#tableBwuInst tbody');
-      const tbBwuRem  = document.querySelector('#tableBwuRem tbody');
-      const tbCarInst = document.querySelector('#tableCarInst tbody');
-      const tbCarRem  = document.querySelector('#tableCarRem tbody');
-
-      function renderTable(tbody, rows, columns, kind){
-        tbody.innerHTML = '';
-        if (!rows.length){
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = columns.length + 1;
-          td.className = 'muted';
-          td.textContent = 'Sem registros';
-          tr.appendChild(td);
-          tbody.appendChild(tr);
-          return;
-        }
-        rows.forEach(row=>{
-          const tr = document.createElement('tr');
-          columns.forEach(col=>{
-            const td = document.createElement('td');
-            td.textContent = row[col] ?? '';
-            tr.appendChild(td);
-          });
-          const tdAct = document.createElement('td');
-          tdAct.className = 'table-actions';
-          const btnDel = document.createElement('button');
-          btnDel.className = 'btn danger';
-          btnDel.textContent = 'Excluir';
-          if (!can('delete')) btnDel.classList.add('hidden');
-          btnDel.addEventListener('click', ()=>{
-            if (!can('delete')) return;
-            deleteRow(row.__id, kind);
-          });
-          tdAct.appendChild(btnDel);
-          tr.appendChild(tdAct);
-          tbody.appendChild(tr);
-        });
-      }
-
-      function deleteRow(id, kindHint=null){
-        let changed = false;
-        const datasets = ['bwuInst','bwuRem','carInst','carRem'];
-        for (const key of datasets){
-          const idx = state[key].findIndex(x=>x.__id === id);
-          if (idx >= 0){
-            const before = state[key][idx];
-            state[key].splice(idx,1);
-            audit('delete', key, id, before, null);
-            changed = true;
-            break;
-          }
-        }
-        if (changed){
-          saveDataSets();
-          renderAll();
-        }
-      }
-
-      function renderAll(){
-        const bwuInstRows = applyFiltersToRows(state.bwuInst, 'bwuInst');
-        const bwuRemRows  = applyFiltersToRows(state.bwuRem,  'bwuRem');
-        const carInstRows = applyFiltersToRows(state.carInst, 'carInst');
-        const carRemRows  = applyFiltersToRows(state.carRem,  'carRem');
-
-        renderTable(tbBwuInst, bwuInstRows, ['numeroSerie','data','maquina','posicao'], 'bwuInst');
-        renderTable(tbBwuRem,  bwuRemRows,  ['numeroSerie','data','maquina','posicao','falha'], 'bwuRem');
-        renderTable(tbCarInst, carInstRows, ['carreta','data','posicao'], 'carInst');
-        renderTable(tbCarRem,  carRemRows,  ['carreta','data','posicao','falha'], 'carRem');
-
-        resumoFiltros();
-        applyPermissionsToUI();
-      }
-
-      // ---------- UI: atualização por permissões ----------
-      const permMap = {
-        add:     () => document.querySelectorAll('[data-perm="add"]'),
-        clearAll:() => document.querySelectorAll('[data-perm="clearAll"]'),
-        manageUsers: () => document.querySelectorAll('[data-perm="manageUsers"]')
-      };
-      function applyPermissionsToUI(){
-        // Botões globais
-        document.getElementById('btnLogin').classList.toggle('hidden', !!state.currentUser);
-        document.getElementById('btnLogout').classList.toggle('hidden', !state.currentUser);
-
-        // Acesso à Administração
-        const sheetAdmin = document.getElementById('sheetAdmin');
-        const adminVisible = can('manageUsers');
-        sheetAdmin.classList.toggle('hidden', !adminVisible);
-
-        // Habilitar/Desabilitar por permissão
-        const setDisabled = (nodes, allowed) => nodes.forEach(n => n.disabled = !allowed);
-        setDisabled(Array.from(permMap.add()), can('add'));
-        setDisabled(Array.from(permMap.clearAll()), can('clearAll'));
-        setDisabled(Array.from(permMap.manageUsers()), can('manageUsers'));
-      }
-
-      // ---------- Autenticação ----------
-      const authModal = document.getElementById('authModal');
-      const authTitle = document.getElementById('authTitle');
-      const authDesc  = document.getElementById('authDesc');
-      const formAuth  = document.getElementById('formAuth');
-      const formFirstAdmin = document.getElementById('formFirstAdmin');
-      const elAuthUser = document.getElementById('authUser');
-      const elAuthPass = document.getElementById('authPass');
-
-      function openLoginModal(){
-        authTitle.textContent = 'Entrar';
-        authDesc.textContent  = 'Informe suas credenciais.';
-        formAuth.classList.remove('hidden');
-        formFirstAdmin.classList.add('hidden');
-        authModal.classList.remove('hidden');
-        elAuthUser.focus();
-      }
-      function openFirstAdminModal(){
-        authTitle.textContent = 'Configurar Administrador';
-        authDesc.textContent  = 'Nenhum usuário encontrado. Crie o usuário Administrador inicial.';
-        formAuth.classList.add('hidden');
-        formFirstAdmin.classList.remove('hidden');
-        authModal.classList.remove('hidden');
-        document.getElementById('faUser').focus();
-      }
-      function closeAuthModal(){
-        authModal.classList.add('hidden');
-        formAuth.reset(); formFirstAdmin.reset();
-      }
-
-      async function tryLogin(username, password){
-        const found = state.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-        if (!found) return false;
-        const ph = await sha256(password);
-        if (ph !== found.passHash) return false;
-        state.currentUser = sanitizeUser(found);
-        saveCurrentUser();
-        audit('login', 'auth', null, null, { user: state.currentUser.username });
-        updateUserBox();
-        applyPermissionsToUI();
-        return true;
-      }
-      function logout(){
-        if (!state.currentUser) return;
-        audit('logout', 'auth', null, sanitizeUser(state.currentUser), null);
-        state.currentUser = null;
-        saveCurrentUser();
-        updateUserBox();
-        applyPermissionsToUI();
-      }
-
-      function updateUserBox(){
-        const name = state.currentUser?.name || 'Não autenticado';
-        const role = state.currentUser?.role || '—';
-        document.getElementById('currentUserName').textContent = name;
-        document.getElementById('currentUserRole').textContent = role;
-      }
-
-      // ---------- Gestão de Usuários ----------
-      const tbUsers = document.querySelector('#tableUsers tbody');
-
-      function renderUsers(){
-        tbUsers.innerHTML = '';
-        if (!state.users.length){
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 4; td.className = 'muted'; td.textContent = 'Sem usuários';
-          tr.appendChild(td); tbUsers.appendChild(tr); return;
-        }
-        state.users.forEach(u=>{
-          const tr = document.createElement('tr');
-          const tdU = document.createElement('td'); tdU.textContent = u.username;
-          const tdN = document.createElement('td'); tdN.textContent = u.name;
-          const tdR = document.createElement('td'); tdR.textContent = u.role;
-          const tdA = document.createElement('td'); tdA.className = 'table-actions';
-
-          const btnReset = document.createElement('button');
-          btnReset.className = 'btn'; btnReset.textContent = 'Resetar senha';
-          btnReset.disabled = !can('manageUsers');
-          btnReset.addEventListener('click', async ()=>{
-            if (!can('manageUsers')) return;
-            const np = prompt(`Nova senha para ${u.username}:`);
-            if (!np || np.length < 6) return alert('Senha inválida (mín. 6).');
-            const oldSan = sanitizeUser(u);
-            u.passHash = await sha256(np);
-            saveUsers();
-            audit('user_reset_password', 'users', u.id, oldSan, null);
-            alert('Senha atualizada.');
-          });
-
-          const btnDel = document.createElement('button');
-          btnDel.className = 'btn danger'; btnDel.textContent = 'Excluir';
-          btnDel.disabled = !can('manageUsers');
-          btnDel.addEventListener('click', ()=>{
-            if (!can('manageUsers')) return;
-            if (state.currentUser && u.username === state.currentUser.username){
-              return alert('Você não pode excluir o próprio usuário em uso.');
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.value.trim()) { el.classList.add('is-invalid'); hasError = true; }
+            else {
+                el.classList.remove('is-invalid');
+                const key = id.split('-').pop();
+                payload[key === 'maq' ? 'maquina' : (key === 'pos' ? 'posicao' : key)] = el.value;
             }
-            // impedir exclusão do último admin
-            const admins = state.users.filter(x=>x.role==='admin');
-            if (u.role==='admin' && admins.length <= 1){
-              return alert('Não é permitido excluir o último Admin.');
+        });
+
+        if (hasError) return alert("Preencha todos os campos!");
+
+        try {
+            if (editMode.active && editMode.type === type) {
+                // MODO EDIÇÃO: Atualiza documento existente
+                await updateDoc(doc(db, type, editMode.id), payload);
+                alert("Registro atualizado com sucesso!");
+                cancelEdit();
+            } else {
+                // MODO NOVO: Cria novo documento
+                await addDoc(collection(db, type), payload);
+                ids.forEach((id, i) => { const el = document.getElementById(id); el.value = ""; if(i===0) el.focus(); });
             }
-            if (confirm(`Excluir usuário ${u.username}?`)){
-              const before = sanitizeUser(u);
-              state.users = state.users.filter(x=>x.id !== u.id);
-              saveUsers();
-              renderUsers();
-              audit('user_delete', 'users', u.id, before, null);
-            }
-          });
+        } catch (e) { alert("Erro: " + e.message); }
+    };
 
-          tdA.appendChild(btnReset); tdA.appendChild(btnDel);
-          tr.appendChild(tdU); tr.appendChild(tdN); tr.appendChild(tdR); tr.appendChild(tdA);
-          tbUsers.appendChild(tr);
+    // --- FUNÇÃO PARA ATIVAR EDIÇÃO ---
+    window.prepareEdit = (type, id, dataJson) => {
+        const data = JSON.parse(decodeURIComponent(dataJson));
+        editMode = { active: true, id: id, type: type };
+
+        // Preencher campos
+        const ids = fieldMapping[type];
+        ids.forEach(fieldId => {
+            const key = fieldId.split('-').pop();
+            const apiKey = key === 'maq' ? 'maquina' : (key === 'pos' ? 'posicao' : key);
+            document.getElementById(fieldId).value = data[apiKey] || "";
+            document.getElementById(fieldId).classList.add('editing-mode');
         });
-      }
 
-      document.getElementById('formAddUser').addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        if (!can('manageUsers')) return;
-        const username = document.getElementById('u_username').value.trim();
-        const name     = document.getElementById('u_name').value.trim();
-        const role     = document.getElementById('u_role').value;
-        const pass     = document.getElementById('u_password').value;
-        if (!username || !name || !pass || pass.length < 6) return alert('Preencha corretamente (senha mín. 6).');
-        if (state.users.some(u => u.username.toLowerCase() === username.toLowerCase())){
-          return alert('Já existe um usuário com esse login.');
-        }
-        const user = { id: uid(), username, name, role, passHash: await sha256(pass) };
-        state.users.push(user);
-        saveUsers(); renderUsers();
-        audit('user_create', 'users', user.id, null, sanitizeUser(user));
-        e.target.reset();
-      });
+        // Mudar visual do botão
+        document.getElementById(`btn-save-${type}`).innerText = "Atualizar";
+        document.getElementById(`btn-save-${type}`).classList.replace('btn-success', 'btn-warning');
+        document.getElementById(`btn-cancel-${type}`).classList.remove('d-none');
 
-      // ---------- Log de Auditoria (UI) ----------
-      const aIni = document.getElementById('aDataIni');
-      const aFim = document.getElementById('aDataFim');
-      const aUser= document.getElementById('aUser');
-      const aAct = document.getElementById('aAction');
-      const aScp = document.getElementById('aScope');
-      const aTxt = document.getElementById('aBusca');
-      const tbAudit = document.querySelector('#tableAudit tbody');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
-      function auditFiltered(){
-        const di = aIni.value || null, df = aFim.value || null;
-        const u = aUser.value.trim().toLowerCase();
-        const ac= aAct.value.trim().toLowerCase();
-        const sc= aScp.value.trim().toLowerCase();
-        const tx= aTxt.value.trim().toLowerCase();
+    // --- CANCELAR EDIÇÃO ---
+    window.cancelEdit = () => {
+        if (!editMode.type) return;
+        const type = editMode.type;
+        const ids = fieldMapping[type];
 
-        return state.audit.filter(e=>{
-          if (di && e.ts.slice(0,10) < di) return false;
-          if (df && e.ts.slice(0,10) > df) return false;
-          if (u && !(e.user||'').toLowerCase().includes(u)) return false;
-          if (ac && !(e.action||'').toLowerCase().includes(ac)) return false;
-          if (sc && !(e.scope||'').toLowerCase().includes(sc)) return false;
-
-          if (tx){
-            const blob = JSON.stringify(e).toLowerCase();
-            if (!blob.includes(tx)) return false;
-          }
-          return true;
+        ids.forEach(id => {
+            document.getElementById(id).value = "";
+            document.getElementById(id).classList.remove('editing-mode', 'is-invalid');
         });
-      }
-      function renderAudit(){
-        tbAudit.innerHTML = '';
-        const rows = auditFiltered();
-        if (!rows.length){
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 6; td.className='muted'; td.textContent='Sem entradas de log';
-          tr.appendChild(td); tbAudit.appendChild(tr); return;
-        }
-        rows.forEach(e=>{
-          const tr = document.createElement('tr');
-          const tdTs = document.createElement('td'); tdTs.textContent = e.ts.replace('T',' ').replace('Z','');
-          const tdUs = document.createElement('td'); tdUs.textContent = e.user;
-          const tdAc = document.createElement('td'); tdAc.textContent = e.action;
-          const tdSc = document.createElement('td'); tdSc.textContent = e.scope;
-          const tdId = document.createElement('td'); tdId.textContent = e.itemId || '—';
-          const tdDt = document.createElement('td');
-          tdDt.textContent = summarizeLogDetail(e);
-          tr.appendChild(tdTs); tr.appendChild(tdUs); tr.appendChild(tdAc); tr.appendChild(tdSc); tr.appendChild(tdId); tr.appendChild(tdDt);
-          tbAudit.appendChild(tr);
+
+        document.getElementById(`btn-save-${type}`).innerText = "Salvar";
+        document.getElementById(`btn-save-${type}`).classList.replace('btn-warning', 'btn-success');
+        document.getElementById(`btn-cancel-${type}`).classList.add('d-none');
+
+        editMode = { active: false, id: null, type: null };
+    };
+
+    // --- SINCRONIZAÇÃO EM TEMPO REAL ---
+    function initRealtimeSync() {
+        const tables = [
+            { id: 'inst_bwu', table: 't-ib' },
+            { id: 'rem_bwu', table: 't-rb' },
+            { id: 'inst_carretas', table: 't-ic' },
+            { id: 'rem_carretas', table: 't-rc' }
+        ];
+
+        tables.forEach(t => {
+            onSnapshot(query(collection(db, t.id), orderBy("timestamp", "desc")), (snapshot) => {
+                const tbody = document.querySelector(`#${t.table} tbody`);
+                tbody.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dataString = encodeURIComponent(JSON.stringify(data));
+                    const row = document.createElement('tr');
+
+                    let html = `<td>${data.serie || data.carreta}</td><td>${data.data}</td><td>${data.maquina}</td><td>${data.posicao}</td>`;
+                    if(t.id.includes('rem')) html += `<td>${data.falha || '-'}</td>`;
+
+                    html += `<td class="d-flex gap-1">
+                        <button class="btn btn-primary btn-sm" onclick="prepareEdit('${t.id}', '${docSnap.id}', '${dataString}')">Editar</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${t.id}', '${docSnap.id}')">Excluir</button>
+                    </td>`;
+
+                    row.innerHTML = html;
+                    tbody.appendChild(row);
+                });
+            });
         });
-      }
-      function summarizeLogDetail(e){
-        try{
-          if (e.action==='create') return 'criado';
-          if (e.action==='delete') return 'excluído';
-          if (e.action==='clear_all') return `limpeza total (${e?.before?.count||0} itens)`;
-          if (e.action==='export_csv') return `exportação (${e?.before?.count||0} itens) → ${e?.after?.filename||''}`;
-          if (e.action==='login') return `login: ${e?.after?.user||''}`;
-          if (e.action==='logout') return `logout`;
-          if (e.action==='user_create') return `novo usuário: ${e?.after?.username} (${e?.after?.role})`;
-          if (e.action==='user_delete') return `usuário removido: ${e?.before?.username}`;
-          if (e.action==='user_reset_password') return `senha redefinida: ${e?.before?.username}`;
-          return JSON.stringify({before:e.before, after:e.after});
-        }catch{ return ''; }
-      }
+    }
 
-      document.getElementById('btnAuditApply').addEventListener('click', renderAudit);
-      document.getElementById('btnAuditClear').addEventListener('click', ()=>{
-        aIni.value=''; aFim.value=''; aUser.value=''; aAct.value=''; aScp.value=''; aTxt.value='';
-        renderAudit();
-      });
-      document.getElementById('btnAuditExport').addEventListener('click', ()=>{
-        const rows = auditFiltered().map(e=>({
-          ts: e.ts, usuario: e.user, acao: e.action, escopo: e.scope, item: e.itemId || '',
-          detalhes: summarizeLogDetail(e)
-        }));
-        exportToCSV('auditoria.csv', rows, ['ts','usuario','acao','escopo','item','detalhes']);
-      });
+    // --- OUTRAS FUNÇÕES (EXCLUIR, PESQUISA, CSV) ---
+    window.deleteItem = async (coll, id) => { if(confirm("Excluir definitivamente?")) await deleteDoc(doc(db, coll, id)); };
 
-      // ---------- Eventos dos filtros gerais ----------
-      document.getElementById('btnAplicarFiltros').addEventListener('click', ()=>{
-        filters.dataIni = elDataIni.value || '';
-        filters.dataFim = elDataFim.value || '';
-        filters.busca   = elBusca.value.trim();
-        filters.maquina = elMaq.value.trim();
-        filters.carreta = elCar.value.trim();
-        filters.falha   = elFalha.value.trim();
-        renderAll();
-      });
-      document.getElementById('btnLimparFiltros').addEventListener('click', ()=>{
-        elDataIni.value = ''; elDataFim.value = '';
-        elBusca.value = ''; elMaq.value = ''; elCar.value = ''; elFalha.value = '';
-        filters.dataIni = ''; filters.dataFim = ''; filters.busca = '';
-        filters.maquina = ''; filters.carreta = ''; filters.falha = '';
-        renderAll();
-      });
-
-      // Atualização dinâmica (UX opcional)
-      ;['input','change'].forEach(ev=>{
-        [elDataIni, elDataFim, elBusca, elMaq, elCar, elFalha].forEach(el=>{
-          el.addEventListener(ev, ()=>{
-            filters.dataIni = elDataIni.value || '';
-            filters.dataFim = elDataFim.value || '';
-            filters.busca   = elBusca.value.trim();
-            filters.maquina = elMaq.value.trim();
-            filters.carreta = elCar.value.trim();
-            filters.falha   = elFalha.value.trim();
-            renderAll();
-          });
+    window.search = (input, tableId) => {
+        const filter = input.value.toLowerCase();
+        document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
         });
-      });
+    };
 
-      // ---------- Formulários de dados ----------
-      const msgBwuInst = document.getElementById('msgBwuInst');
-      const msgBwuRem  = document.getElementById('msgBwuRem');
-      const msgCarInst = document.getElementById('msgCarInst');
-      const msgCarRem  = document.getElementById('msgCarRem');
+    window.exportToCSV = async (type) => {
+        const querySnapshot = await getDocs(query(collection(db, type), orderBy("timestamp", "desc")));
+        if (querySnapshot.empty) return alert("Vazio.");
+        let csv = "\uFEFF" + (type.includes('bwu') ? "Série" : "Carreta") + ";Data;Máquina;Posição" + (type.includes('rem') ? ";Falha\n" : "\n");
+        querySnapshot.forEach(doc => {
+            const d = doc.data();
+            let row = `${d.serie || d.carreta};${d.data};${d.maquina};${d.posicao}`;
+            if(type.includes('rem')) row += `;${d.falha || ""}`;
+            csv += row + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_${type}.csv`;
+        link.click();
+    };
+</script>
 
-      // BWU - Instalação
-      document.getElementById('formBwuInstalacao').addEventListener('submit', (e)=>{
-        e.preventDefault();
-        if (!can('add')) return setMsg(msgBwuInst, 'Sem permissão para adicionar.', 'err');
-        const numeroSerie = document.getElementById('bwuI_numeroSerie').value.trim();
-        const data        = document.getElementById('bwuI_data').value;
-        const maquina     = document.getElementById('bwuI_maquina').value.trim();
-        const posicao     = document.getElementById('bwuI_posicao').value.trim();
-        if (!numeroSerie || !data || !maquina || !posicao){
-          setMsg(msgBwuInst, 'Preencha todos os campos obrigatórios.', 'err'); return;
-        }
-        const row = { __id: uid(), numeroSerie, data: fmtDate(data), maquina, posicao };
-        state.bwuInst.push(row);
-        saveDataSets();
-        audit('create', 'bwuInst', row.__id, null, row);
-        renderAll(); e.target.reset();
-        setMsg(msgBwuInst, 'Registro de instalação (BWU) salvo.');
-      });
-      document.getElementById('exportBwuInstCSV').addEventListener('click', ()=>{
-        const rows = applyFiltersToRows(state.bwuInst, 'bwuInst');
-        exportToCSV('bwu_instalacao.csv', rows, ['numeroSerie','data','maquina','posicao']);
-        audit('export_csv', 'bwuInst', null, {count: rows.length}, {filename:'bwu_instalacao.csv'});
-      });
-      document.getElementById('clearBwuInst').addEventListener('click', ()=>{
-        if (!can('clearAll')) return alert('Sem permissão para limpar.');
-        if (confirm('Deseja limpar TODOS os registros de Instalação (BWU)?')){
-          const beforeCount = state.bwuInst.length;
-          state.bwuInst = [];
-          saveDataSets(); renderAll();
-          audit('clear_all', 'bwuInst', null, {count: beforeCount}, null);
-          setMsg(msgBwuInst, 'Registros limpos.');
-        }
-      });
-
-      // BWU - Remoção
-      document.getElementById('formBwuRemocao').addEventListener('submit', (e)=>{
-        e.preventDefault();
-        if (!can('add')) return setMsg(msgBwuRem, 'Sem permissão para adicionar.', 'err');
-        const numeroSerie = document.getElementById('bwuR_numeroSerie').value.trim();
-        const data        = document.getElementById('bwuR_data').value;
-        const maquina     = document.getElementById('bwuR_maquina').value.trim();
-        const posicao     = document.getElementById('bwuR_posicao').value.trim();
-        const falha       = document.getElementById('bwuR_falha').value.trim();
-        if (!numeroSerie || !data || !maquina || !posicao){
-          setMsg(msgBwuRem, 'Preencha todos os campos obrigatórios.', 'err'); return;
-        }
-        const row = { __id: uid(), numeroSerie, data: fmtDate(data), maquina, posicao, falha };
-        state.bwuRem.push(row);
-        saveDataSets();
-        audit('create', 'bwuRem', row.__id, null, row);
-        renderAll(); e.target.reset();
-        setMsg(msgBwuRem, 'Registro de remoção (BWU) salvo.');
-      });
-      document.getElementById('exportBwuRemCSV').addEventListener('click', ()=>{
-        const rows = applyFiltersToRows(state.bwuRem, 'bwuRem');
-        exportToCSV('bwu_remocao.csv', rows, ['numeroSerie','data','maquina','posicao','falha']);
-        audit('export_csv', 'bwuRem', null, {count: rows.length}, {filename:'bwu_remocao.csv'});
-      });
-      document.getElementById('clearBwuRem').addEventListener('click', ()=>{
-        if (!can('clearAll')) return alert('Sem permissão para limpar.');
-        if (confirm('Deseja limpar TODOS os registros de Remoção (BWU)?')){
-          const beforeCount = state.bwuRem.length;
-          state.bwuRem = [];
-          saveDataSets(); renderAll();
-          audit('clear_all', 'bwuRem', null, {count: beforeCount}, null);
-          setMsg(msgBwuRem, 'Registros limpos.');
-        }
-      });
-
-      // CARRETAS - Instalação
-      document.getElementById('formCarInst').addEventListener('submit', (e)=>{
-        e.preventDefault();
-        if (!can('add')) return setMsg(msgCarInst, 'Sem permissão para adicionar.', 'err');
-        const carreta = document.getElementById('carI_carreta').value.trim();
-        const data    = document.getElementById('carI_data').value;
-        const posicao = document.getElementById('carI_posicao').value.trim();
-        if (!carreta || !data || !posicao){
-          setMsg(msgCarInst, 'Preencha todos os campos obrigatórios.', 'err'); return;
-        }
-        const row = { __id: uid(), carreta, data: fmtDate(data), posicao };
-        state.carInst.push(row);
-        saveDataSets();
-        audit('create', 'carInst', row.__id, null, row);
-        renderAll(); e.target.reset();
-        setMsg(msgCarInst, 'Registro de instalação (Carretas) salvo.');
-      });
-      document.getElementById('exportCarInstCSV').addEventListener('click', ()=>{
-        const rows = applyFiltersToRows(state.carInst, 'carInst');
-        exportToCSV('carretas_instalacao.csv', rows, ['carreta','data','posicao']);
-        audit('export_csv', 'carInst', null, {count: rows.length}, {filename:'carretas_instalacao.csv'});
-      });
-      document.getElementById('clearCarInst').addEventListener('click', ()=>{
-        if (!can('clearAll')) return alert('Sem permissão para limpar.');
-        if (confirm('Deseja limpar TODOS os registros de Instalação (Carretas)?')){
-          const beforeCount = state.carInst.length;
-          state.carInst = [];
-          saveDataSets(); renderAll();
-          audit('clear_all', 'carInst', null, {count: beforeCount}, null);
-          setMsg(msgCarInst, 'Registros limpos.');
-        }
-      });
-
-      // CARRETAS - Remoção
-      document.getElementById('formCarRem').addEventListener('submit', (e)=>{
-        e.preventDefault();
-        if (!can('add')) return setMsg(msgCarRem, 'Sem permissão para adicionar.', 'err');
-        const carreta = document.getElementById('carR_carreta').value.trim();
-        const data    = document.getElementById('carR_data').value;
-        const posicao = document.getElementById('carR_posicao').value.trim();
-        const falha   = document.getElementById('carR_falha').value.trim();
-        if (!carreta || !data || !posicao){
-          setMsg(msgCarRem, 'Preencha todos os campos obrigatórios.', 'err'); return;
-        }
-        const row = { __id: uid(), carreta, data: fmtDate(data), posicao, falha };
-        state.carRem.push(row);
-        saveDataSets();
-        audit('create', 'carRem', row.__id, null, row);
-        renderAll(); e.target.reset();
-        setMsg(msgCarRem, 'Registro de remoção (Carretas) salvo.');
-      });
-      document.getElementById('exportCarRemCSV').addEventListener('click', ()=>{
-        const rows = applyFiltersToRows(state.carRem, 'carRem');
-        exportToCSV('carretas_remocao.csv', rows, ['carreta','data','posicao','falha']);
-        audit('export_csv', 'carRem', null, {count: rows.length}, {filename:'carretas_remocao.csv'});
-      });
-      document.getElementById('clearCarRem').addEventListener('click', ()=>{
-        if (!can('clearAll')) return alert('Sem permissão para limpar.');
-        if (confirm('Deseja limpar TODOS os registros de Remoção (Carretas)?')){
-          const beforeCount = state.carRem.length;
-          state.carRem = [];
-          saveDataSets(); renderAll();
-          audit('clear_all', 'carRem', null, {count: beforeCount}, null);
-          setMsg(msgCarRem, 'Registros limpos.');
-        }
-      });
-
-      // ---------- Botões gerais ----------
-      document.getElementById('saveBwuStorage').addEventListener('click', ()=>{
-        saveDataSets(); alert('Dados BWU salvos no navegador.');
-      });
-      document.getElementById('saveCarStorage').addEventListener('click', ()=>{
-        saveDataSets(); alert('Dados Carretas salvos no navegador.');
-      });
-
-      // Navegação (Ações Rápidas + Topbar)
-      const sheetBWU = document.getElementById('sheetBWU');
-      const sheetCar = document.getElementById('sheetCarretas');
-      const sheetAdm = document.getElementById('sheetAdmin');
-      function toggleSection(el){ el.classList.toggle('hidden'); if (!el.classList.contains('hidden')) el.scrollIntoView({behavior:'smooth'}); }
-      document.getElementById('btnBWU').addEventListener('click', ()=> toggleSection(sheetBWU));
-      document.getElementById('btnCarretas').addEventListener('click', ()=> toggleSection(sheetCar));
-      document.getElementById('navToggleBWU').addEventListener('click', ()=> toggleSection(sheetBWU));
-      document.getElementById('navToggleCar').addEventListener('click', ()=> toggleSection(sheetCar));
-      document.getElementById('navToggleAdmin').addEventListener('click', ()=>{
-        if (!can('manageUsers')) return alert('Apenas Admin pode abrir Administração.');
-        toggleSection(sheetAdm);
-      });
-
-      // Login/Logout
-      document.getElementById('btnLogin').addEventListener('click', ()=>{
-        if (!state.users.length) openFirstAdminModal(); else openLoginModal();
-      });
-      document.getElementById('btnCancelLogin').addEventListener('click', closeAuthModal);
-      document.getElementById('btnLogout').addEventListener('click', logout);
-      formAuth.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const ok = await tryLogin(elAuthUser.value.trim(), elAuthPass.value);
-        if (!ok) return alert('Usuário ou senha inválidos.');
-        closeAuthModal(); renderUsers(); renderAudit(); renderAll();
-      });
-      formFirstAdmin.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const u = document.getElementById('faUser').value.trim();
-        const n = document.getElementById('faName').value.trim();
-        const p = document.getElementById('faPass').value;
-        if (!u || !n || p.length<6) return alert('Preencha corretamente (senha mín. 6).');
-        const admin = { id: uid(), username:u, name:n, role:'admin', passHash: await sha256(p) };
-        state.users = [admin];
-        saveUsers();
-        audit('user_create', 'users', admin.id, null, sanitizeUser(admin));
-        alert('Administrador criado. Faça login.');
-        openLoginModal();
-      });
-
-      // ---------- Inicialização ----------
-      loadFromStorage();
-      // Restaurar sessão simplificada (apenas dados básicos salvos)
-      try{
-        const cur = JSON.parse(localStorage.getItem(STORAGE_KEYS.current) || 'null');
-        if (cur && cur.username){
-          // seta currentUser como o salvo (sem validar senha)
-          state.currentUser = cur;
-        }
-      }catch{}
-      updateUserBox();
-      applyPermissionsToUI();
-      renderAll();
-      renderUsers();
-      renderAudit();
-
-      // Se não houver usuários, força modal de criação
-      if (!state.users.length){
-        openFirstAdminModal();
-      }
-    })();
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
