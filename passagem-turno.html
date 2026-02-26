@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Passagem de Turno</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    :root { --primary-color: #2c3e50; --secondary-color: #34495e; }
+    body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .login-container { max-width: 400px; margin: 100px auto; }
+    #app-content { display: none; padding: 20px; }
+    .nav-tabs .nav-link { color: var(--secondary-color); font-weight: 600; cursor: pointer; }
+    .nav-tabs .nav-link.active { border-bottom: 3px solid #0d6efd; color: #0d6efd; }
+    .table-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn-add { height: 38px; font-weight: bold; }
+    .is-invalid { border-color: #dc3545 !important; }
+    .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
+    .editing-mode { background-color: #fff3cd !important; border: 2px solid #ffca2c !important; }
+    .truncate {
+      max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="auth-section" class="login-container">
+    <div class="card shadow border-0">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4">Acesso ao Sistema</h3>
+        <div class="mb-3">
+          <label class="form-label">E-mail</label>
+          <input type="email" id="login-email" class="form-control" placeholder="usuario@empresa.com"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="******"/>
+        </div>
+        <button class="btn btn-primary w-100" id="btn-login">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-content" class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold text-dark m-0">Passagem de Turno</h2>
+      <div>
+        <span id="user-display" class="me-3 text-muted small"></span>
+        <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <!-- FORMULÁRIO -->
+      <div class="row g-2 mb-4" id="form-passagem_turnos">
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Turno</label>
+          <select id="f-pt-turno" class="form-select">
+            <option value="">Selecione...</option>
+            <option>1º Turno</option>
+            <option>2º Turno</option>
+            <option>3º Turno</option>
+            <option>Administrativo</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Data</label>
+          <input type="date" id="f-pt-data" class="form-control"/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Executantes</label>
+          <input type="text" id="f-pt-executantes" class="form-control" placeholder="Ex.: Ana, Bruno, Carlos"/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Informações</label>
+          <textarea id="f-pt-informacoes" class="form-control" rows="1" placeholder="Resumo das ocorrências, pendências, riscos, etc."></textarea>
+        </div>
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button class="btn btn-success btn-add" id="btn-save-passagem_turnos" onclick="saveData('passagem_turnos')">Salvar</button>
+          <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-passagem_turnos" onclick="cancelEdit()">✖ Cancelar edição</button>
+        </div>
+      </div>
+
+      <!-- AÇÕES DE LISTA -->
+      <div class="header-actions">
+        <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-pt')"/>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('passagem_turnos')">📥 Exportar CSV</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSVHoje()">📥 Exportar CSV (somente hoje)</button>
+        </div>
+      </div>
+
+      <!-- TABELA -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="t-pt">
+          <thead>
+            <tr>
+              <th style="min-width:120px">Turno</th>
+              <th style="min-width:120px">Data</th>
+              <th style="min-width:200px">Executantes</th>
+              <th style="min-width:300px">Informações</th>
+              <th style="min-width:140px">Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FIREBASE + APP SCRIPT -->
+  <script type="module">
+    // Firebase (CDN módulos)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 1) Substitua pelos dados do seu projeto Firebase
+    const firebaseConfig = {
+  apiKey: "AIzaSyDocuZcwDoCYOgy1MzIzXwLEjFsWYTnleU",
+  authDomain: "passagem-de-turno-d737e.firebaseapp.com",
+  projectId: "passagem-de-turno-d737e",
+  storageBucket: "passagem-de-turno-d737e.firebasestorage.app",
+  messagingSenderId: "1018940172399",
+  appId: "1:1018940172399:web:0570e4167fc09d5bb7059a",
+  measurementId: "G-CHM8VD6X7R"
+};
+
+    // Inicialização Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Estado de edição
+    let editMode = { active: false, id: null, type: null };
+
+    // Mapeamento dos campos do formulário desta coleção
+    const fieldMapping = {
+      'passagem_turnos': ['f-pt-turno', 'f-pt-data', 'f-pt-executantes', 'f-pt-informacoes']
+    };
+
+    // Utilitário para escapar HTML ao escrever no DOM (reduz risco de XSS)
+    const escapeHTML = (str = "") => str
+      .toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+    // --- AUTENTICAÇÃO ---
+    document.getElementById('btn-login').addEventListener('click', () => {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      if (!email || !pass) return alert("Informe e-mail e senha.");
+      signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Erro: " + err.message));
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        document.getElementById('user-display').innerText = user.email;
+        initRealtimeSync();
+      } else {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-content').style.display = 'none';
+      }
+    });
+
+    // --- SALVAR/ATUALIZAR DADOS ---
+    window.saveData = async (type) => {
+      const ids = fieldMapping[type];
+      let hasError = false;
+      let payload = { timestamp: Date.now() };
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        const val = (el.value || "").toString().trim();
+        if (!val) { el.classList.add('is-invalid'); hasError = true; }
+        else {
+          el.classList.remove('is-invalid');
+          const key = id.split('-').pop(); // turno | data | executantes | informacoes
+          payload[key] = val;
+        }
+      });
+
+      if (hasError) return alert("Preencha todos os campos!");
+
+      try {
+        if (editMode.active && editMode.type === type) {
+          await updateDoc(doc(db, type, editMode.id), payload);
+          alert("Registro atualizado com sucesso!");
+          cancelEdit();
+        } else {
+          await addDoc(collection(db, type), payload);
+          // limpar
+          ids.forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.value = "";
+            el.classList.remove('is-invalid');
+            if (i === 0) el.focus();
+          });
+        }
+      } catch (e) {
+        alert("Erro: " + e.message);
+      }
+    };
+
+    // --- PREPARAR EDIÇÃO ---
+    window.prepareEdit = (type, id, dataJson) => {
+      const data = JSON.parse(decodeURIComponent(dataJson));
+      editMode = { active: true, id, type };
+
+      const ids = fieldMapping[type];
+      ids.forEach(fieldId => {
+        const key = fieldId.split('-').pop();
+        document.getElementById(fieldId).value = data[key] || "";
+        document.getElementById(fieldId).classList.add('editing-mode');
+      });
+
+      document.getElementById(`btn-save-${type}`).innerText = "Atualizar";
+      document.getElementById(`btn-save-${type}`).classList.replace('btn-success', 'btn-warning');
+      document.getElementById(`btn-cancel-${type}`).classList.remove('d-none');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- CANCELAR EDIÇÃO ---
+    window.cancelEdit = () => {
+      if (!editMode.type) return;
+      const { type } = editMode;
+      const ids = fieldMapping[type];
+
+      ids.forEach(id => {
+        document.getElementById(id).value = "";
+        document.getElementById(id).classList.remove('editing-mode', 'is-invalid');
+      });
+
+      document.getElementById(`btn-save-${type}`).innerText = "Salvar";
+      document.getElementById(`btn-save-${type}`).classList.replace('btn-warning', 'btn-success');
+      document.getElementById(`btn-cancel-${type}`).classList.add('d-none');
+
+      editMode = { active: false, id: null, type: null };
+    };
+
+    // --- LISTAGEM EM TEMPO REAL ---
+    function initRealtimeSync() {
+      const t = { id: 'passagem_turnos', table: 't-pt' };
+
+      onSnapshot(query(collection(db, t.id), orderBy("timestamp", "desc")), (snapshot) => {
+        const tbody = document.querySelector(`#${t.table} tbody`);
+        tbody.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const dataString = encodeURIComponent(JSON.stringify(data));
+          const row = document.createElement('tr');
+
+          const turno = escapeHTML(data.turno || "");
+          const dataStr = escapeHTML(data.data || "");
+          const executantes = escapeHTML(data.executantes || "");
+          const informacoes = escapeHTML(data.informacoes || "");
+
+          row.innerHTML = `
+            <td>${turno}</td>
+            <td>${dataStr}</td>
+            <td>${executantes}</td>
+            <td class="truncate" title="${informacoes}">${informacoes}</td>
+            <td class="d-flex gap-1">
+              <button class="btn btn-primary btn-sm" onclick="prepareEdit('${t.id}', '${docSnap.id}', '${dataString}')">Editar</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${t.id}', '${docSnap.id}')">Excluir</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    // --- EXCLUIR / PESQUISAR / EXPORTAR CSV ---
+    window.deleteItem = async (coll, id) => {
+      if (confirm("Excluir definitivamente?")) {
+        await deleteDoc(doc(db, coll, id));
+      }
+    };
+
+    window.search = (input, tableId) => {
+      const filter = input.value.toLowerCase();
+      document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+      });
+    };
+
+    window.exportToCSV = async (type) => {
+      const q = query(collection(db, type), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return alert("Sem dados para exportar.");
+      let csv = "\uFEFFTurno;Data;Executantes;Informações\n";
+      querySnapshot.forEach(doc => {
+        const d = doc.data();
+        // Coloque entre aspas caso tenha ; ou quebras de linha
+        const linha = [
+          d.turno || "",
+          d.data || "",
+          (d.executantes || "").replaceAll("\n"," ").replaceAll(";", ","),
+          (d.informacoes || "").replaceAll("\n"," ").replaceAll(";", ",")
+        ].map(v => `"${(v || "").toString().replaceAll('"','""')}"`).join(";");
+        csv += linha + "\n";
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `passagem_turnos.csv`;
+      link.click();
+    };
+
+    // Exportar somente registros da data de hoje (baseado em campo "data")
+    window.exportToCSVHoje = async () => {
+      const hoje = new Date();
+      const yyyy = hoje.getFullYear();
+      const mm = String(hoje.getMonth()+1).padStart(2,'0');
+      const dd = String(hoje.getDate()).padStart(2,'0');
+      const dataHoje = `${yyyy}-${mm}-${dd}`; // formato de input[type=date]
+
+      const q = query(
+        collection(db, 'passagem_turnos'),
+        where("data", "==", dataHoje),
+        orderBy("timestamp", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return alert("Sem registros para hoje.");
+      let csv = "\uFEFFTurno;Data;Executantes;Informações\n";
+      querySnapshot.forEach(doc => {
+        const d = doc.data();
+        const linha = [
+          d.turno || "",
+          d.data || "",
+          (d.executantes || "").replaceAll("\n"," ").replaceAll(";", ","),
+          (d.informacoes || "").replaceAll("\n"," ").replaceAll(";", ",")
+        ].map(v => `"${(v || "").toString().replaceAll('"','""')}"`).join(";");
+        csv += linha + "\n";
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `passagem_turnos_${dataHoje}.csv`;
+      link.click();
+    };
+
+    // Define data padrão como hoje no carregamento
+    (function setHojeNoCampoData() {
+      const el = document.getElementById('f-pt-data');
+      const hoje = new Date();
+      const yyyy = hoje.getFullYear();
+      const mm = String(hoje.getMonth()+1).padStart(2,'0');
+      const dd = String(hoje.getDate()).padStart(2,'0');
+      el.value = `${yyyy}-${mm}-${dd}`;
+    })();
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
