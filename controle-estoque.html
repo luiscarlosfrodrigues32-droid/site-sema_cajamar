@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro de Peças / Estoque</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    :root { --primary-color: #2c3e50; --secondary-color: #34495e; }
+    body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .login-container { max-width: 400px; margin: 100px auto; }
+    #app-content { display: none; padding: 20px; }
+    .table-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn-add { height: 38px; font-weight: bold; }
+    .is-invalid { border-color: #dc3545 !important; }
+    .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
+    .editing-mode { background-color: #fff3cd !important; border: 2px solid #ffca2c !important; }
+    .truncate { max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0; }
+    .form-section-title { font-weight: 700; color: var(--secondary-color); margin-top: 8px; }
+    .small-help { font-size: .8rem; color: #6c757d; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="auth-section" class="login-container">
+    <div class="card shadow border-0">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4">Acesso ao Sistema</h3>
+        <div class="mb-3">
+          <label class="form-label">E-mail</label>
+          <input type="email" id="login-email" class="form-control" placeholder="usuario@empresa.com"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="******"/>
+        </div>
+        <button class="btn btn-primary w-100" id="btn-login">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-content" class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold text-dark m-0">Cadastro de Peças / Estoque</h2>
+      <div>
+        <span id="user-display" class="me-3 text-muted small"></span>
+        <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <!-- FORMULÁRIO -->
+      <div class="row g-3 mb-4" id="form-pecas_estoque">
+
+        <div class="col-12"><div class="form-section-title">Identificação</div></div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Nicho*</label>
+          <input type="text" id="f-pe-nicho" class="form-control" placeholder="Ex.: A01" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Caixa*</label>
+          <input type="text" id="f-pe-caixa" class="form-control" placeholder="Ex.: C3" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Part Number*</label>
+          <input type="text" id="f-pe-partnumber" class="form-control" placeholder="Ex.: PN-12345" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Código ECT</label>
+          <input type="text" id="f-pe-codigoect" class="form-control" placeholder="Ex.: ECT-0001">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Criticidade</label>
+          <select id="f-pe-criticidade" class="form-select">
+            <option value="">Selecione...</option>
+            <option>Baixa</option>
+            <option>Média</option>
+            <option>Alta</option>
+            <option>Crítica</option>
+          </select>
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Descrições</div></div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Descrição 1*</label>
+          <input type="text" id="f-pe-descricao1" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Descrição 2</label>
+          <input type="text" id="f-pe-descricao2" class="form-control">
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Locais de Instalação</div></div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Local de instalação 1</label>
+          <input type="text" id="f-pe-local1" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Local de instalação 2</label>
+          <input type="text" id="f-pe-local2" class="form-control">
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Quantidades & Reposição</div></div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Quantidade em estoque</label>
+          <input type="number" id="f-pe-qtdestoque" class="form-control" step="1" min="0" value="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Quantidade instalada</label>
+          <input type="number" id="f-pe-qtdinstalada" class="form-control" step="1" min="0" value="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Estoque mínimo</label>
+          <input type="number" id="f-pe-estoquemin" class="form-control" step="1" min="0" value="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Tempo de Reposição (dias)</label>
+          <input type="number" id="f-pe-temporeposicao" class="form-control" step="1" min="0" value="0">
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Custos</div></div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Custo unitário (R$)</label>
+          <input type="number" id="f-pe-custounitario" class="form-control" step="0.01" min="0" value="0">
+          <div class="small-help">Use ponto para decimais (ex.: 123.45)</div>
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Especificações & Fornecedores</div></div>
+        <div class="col-md-12">
+          <label class="form-label small text-muted">Especificações Técnicas</label>
+          <textarea id="f-pe-especificacoes" rows="2" class="form-control" placeholder="Dimensões, material, tensão, padrão, etc."></textarea>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Fornecedor 1</label>
+          <input type="text" id="f-pe-fornecedor1" class="form-control" placeholder="Nome / contato">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Fornecedor 2</label>
+          <input type="text" id="f-pe-fornecedor2" class="form-control" placeholder="Nome / contato">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Fornecedor 3</label>
+          <input type="text" id="f-pe-fornecedor3" class="form-control" placeholder="Nome / contato">
+        </div>
+
+        <div class="col-12"><div class="form-section-title">Imagem da Peça</div></div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Upload (JPG/PNG)</label>
+          <input type="file" id="f-pe-imagem" class="form-control" accept="image/*">
+          <div class="small-help">Tamanho recomendado: até ~1MB. A imagem será salva no Firebase Storage.</div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div id="img-preview"></div>
+        </div>
+
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button class="btn btn-success btn-add" id="btn-save-pecas_estoque" onclick="saveData('pecas_estoque')">Salvar</button>
+          <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-pecas_estoque" onclick="cancelEdit()">✖ Cancelar edição</button>
+        </div>
+      </div>
+
+      <!-- AÇÕES DE LISTA -->
+      <div class="header-actions">
+        <input type="text" class="form-control w-50" placeholder="Pesquisar..." onkeyup="search(this, 't-pe')"/>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportToCSV('pecas_estoque')">📥 Exportar CSV</button>
+        </div>
+      </div>
+
+      <!-- TABELA -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="t-pe">
+          <thead>
+            <tr>
+              <th>Imagem</th>
+              <th>Nicho</th>
+              <th>Caixa</th>
+              <th>Part Number</th>
+              <th>Código ECT</th>
+              <th>Descrição 1</th>
+              <th>Descrição 2</th>
+              <th>Local 1</th>
+              <th>Local 2</th>
+              <th>Qtd. Estoque</th>
+              <th>Qtd. Instalada</th>
+              <th>Estoque Mín.</th>
+              <th>Criticidade</th>
+              <th>Custo Unit.</th>
+              <th>Reposição (dias)</th>
+              <th>Especificações</th>
+              <th>Fornecedor 1</th>
+              <th>Fornecedor 2</th>
+              <th>Fornecedor 3</th>
+              <th style="min-width:140px">Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FIREBASE + APP SCRIPT -->
+  <script type="module">
+    // Firebase (CDN módulos)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+    // 1) Substitua pelos dados do seu projeto Firebase
+    const firebaseConfig = {
+  apiKey: "AIzaSyBmbe7Vr5VuU-NbzeiVSZYJJYWdoQnDCfk",
+  authDomain: "controle-estoque-sema.firebaseapp.com",
+  projectId: "controle-estoque-sema",
+  storageBucket: "controle-estoque-sema.firebasestorage.app",
+  messagingSenderId: "149322140692",
+  appId: "1:149322140692:web:8ea4bf3718c52eea9eab01",
+  measurementId: "G-EYR2W1XBPN"
+};
+
+    // Inicialização Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Estado de edição
+    let editMode = { active: false, id: null, type: null, currentImagePath: null };
+
+    // Mapeamento dos campos (exceto o file)
+    const fieldIds = [
+      'f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-codigoect',
+      'f-pe-descricao1','f-pe-descricao2',
+      'f-pe-local1','f-pe-local2',
+      'f-pe-qtdestoque','f-pe-qtdinstalada','f-pe-estoquemin',
+      'f-pe-criticidade','f-pe-custounitario','f-pe-temporeposicao',
+      'f-pe-especificacoes',
+      'f-pe-fornecedor1','f-pe-fornecedor2','f-pe-fornecedor3'
+    ];
+
+    // Chaves Firestore na mesma ordem
+    const fieldKeys = [
+      'nicho','caixa','partNumber','codigoECT',
+      'descricao1','descricao2',
+      'local1','local2',
+      'qtdEstoque','qtdInstalada','estoqueMinimo',
+      'criticidade','custoUnitario','tempoReposicao',
+      'especificacoes',
+      'fornecedor1','fornecedor2','fornecedor3'
+    ];
+
+    const numericFields = new Set(['qtdEstoque','qtdInstalada','estoqueMinimo','custoUnitario','tempoReposicao']);
+
+    // Utilitário para escapar HTML
+    const escapeHTML = (str = "") => str.toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+    const toNumberOrNull = (val) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const n = Number(val);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const fmtBRL = (n) => {
+      if (n === null || n === undefined) return "";
+      try {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
+      } catch { return n.toString(); }
+    };
+
+    // Pré-visualização da imagem
+    const fileInput = document.getElementById('f-pe-imagem');
+    const previewBox = document.getElementById('img-preview');
+    fileInput.addEventListener('change', () => {
+      previewBox.innerHTML = "";
+      const f = fileInput.files?.[0];
+      if (!f) return;
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = URL.createObjectURL(f);
+      previewBox.appendChild(img);
+    });
+
+    // --- AUTENTICAÇÃO ---
+    document.getElementById('btn-login').addEventListener('click', () => {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      if (!email || !pass) return alert("Informe e-mail e senha.");
+      signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Erro: " + err.message));
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        document.getElementById('user-display').innerText = user.email;
+        initRealtimeSync();
+      } else {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-content').style.display = 'none';
+      }
+    });
+
+    // --- SALVAR/ATUALIZAR DADOS ---
+    window.saveData = async () => {
+      // Validação mínima (campos-chave)
+      const requiredIds = ['f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-descricao1'];
+      let hasError = false;
+
+      // Monta payload
+      const payload = { timestamp: Date.now() };
+      for (let i = 0; i < fieldIds.length; i++) {
+        const el = document.getElementById(fieldIds[i]);
+        const key = fieldKeys[i];
+        const raw = (el.value || "").toString().trim();
+
+        // Regras de required
+        if (requiredIds.includes(fieldIds[i]) && !raw) {
+          el.classList.add('is-invalid'); hasError = true; continue;
+        } else {
+          el.classList.remove('is-invalid');
+        }
+
+        if (numericFields.has(key)) {
+          payload[key] = raw === "" ? null : toNumberOrNull(raw);
+        } else {
+          payload[key] = raw || "";
+        }
+      }
+      if (hasError) return alert("Preencha os campos obrigatórios marcados com *.");
+
+      // Upload de imagem (se houver)
+      const file = fileInput.files?.[0];
+      try {
+        let imageURL = null;
+        let imagePath = null;
+
+        if (file) {
+          const safePN = (payload.partNumber || "semPN").replaceAll(/[^\w.-]/g, "_");
+          const path = `pecas/${safePN}/${Date.now()}_${file.name}`;
+          const ref = sRef(storage, path);
+          await uploadBytes(ref, file);
+          imageURL = await getDownloadURL(ref);
+          imagePath = path;
+        }
+
+        if (editMode.active) {
+          // Se houver nova imagem e existir imagem anterior, remove a antiga
+          if (file && editMode.currentImagePath) {
+            try { await deleteObject(sRef(storage, editMode.currentImagePath)); } catch {}
+          }
+
+          // Atualiza doc
+          const update = { ...payload };
+          if (file) { update.imageURL = imageURL; update.imagePath = imagePath; }
+          await updateDoc(doc(db, 'pecas_estoque', editMode.id), update);
+          alert("Peça atualizada com sucesso!");
+          cancelEdit();
+        } else {
+          // Cria doc
+          const create = { ...payload };
+          if (file) { create.imageURL = imageURL; create.imagePath = imagePath; }
+          await addDoc(collection(db, 'pecas_estoque'), create);
+
+          // Limpa formulário
+          fieldIds.forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.value = "";
+            el.classList.remove('is-invalid');
+            if (i === 0) el.focus();
+          });
+          fileInput.value = "";
+          previewBox.innerHTML = "";
+        }
+
+      } catch (e) {
+        alert("Erro ao salvar: " + e.message);
+      }
+    };
+
+    // --- PREPARAR EDIÇÃO ---
+    window.prepareEdit = (id, dataJson) => {
+      const data = JSON.parse(decodeURIComponent(dataJson));
+      editMode = { active: true, id, type: 'pecas_estoque', currentImagePath: data.imagePath || null };
+
+      // Popular campos
+      for (let i = 0; i < fieldIds.length; i++) {
+        const el = document.getElementById(fieldIds[i]);
+        const key = fieldKeys[i];
+        const val = data[key];
+
+        if (numericFields.has(key)) {
+          el.value = (val ?? "") === null ? "" : val;
+        } else {
+          el.value = val || "";
+        }
+        el.classList.add('editing-mode');
+      }
+
+      // Preview imagem existente
+      previewBox.innerHTML = "";
+      fileInput.value = "";
+      if (data.imageURL) {
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.src = data.imageURL;
+        previewBox.appendChild(img);
+      }
+
+      document.getElementById(`btn-save-pecas_estoque`).innerText = "Atualizar";
+      document.getElementById(`btn-save-pecas_estoque`).classList.replace('btn-success', 'btn-warning');
+      document.getElementById(`btn-cancel-pecas_estoque`).classList.remove('d-none');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- CANCELAR EDIÇÃO ---
+    window.cancelEdit = () => {
+      if (!editMode.type) return;
+      for (const id of fieldIds) {
+        const el = document.getElementById(id);
+        el.value = "";
+        el.classList.remove('editing-mode', 'is-invalid');
+      }
+      fileInput.value = "";
+      previewBox.innerHTML = "";
+
+      document.getElementById(`btn-save-pecas_estoque`).innerText = "Salvar";
+      document.getElementById(`btn-save-pecas_estoque`).classList.replace('btn-warning', 'btn-success');
+      document.getElementById(`btn-cancel-pecas_estoque`).classList.add('d-none');
+
+      editMode = { active: false, id: null, type: null, currentImagePath: null };
+    };
+
+    // --- LISTAGEM EM TEMPO REAL ---
+    function initRealtimeSync() {
+      onSnapshot(query(collection(db, 'pecas_estoque'), orderBy("timestamp", "desc")), (snapshot) => {
+        const tbody = document.querySelector(`#t-pe tbody`);
+        tbody.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const d = docSnap.data();
+          const dataString = encodeURIComponent(JSON.stringify(d));
+
+          const row = document.createElement('tr');
+          const imgCell = d.imageURL
+            ? `<a href="${escapeHTML(d.imageURL)}" target="_blank" rel="noopener noreferrer"><img class="thumb" src="${escapeHTML(d.imageURL)}" alt="img"/></a>`
+            : `<span class="text-muted small">sem imagem</span>`;
+
+          row.innerHTML = `
+            <td>${imgCell}</td>
+            <td>${escapeHTML(d.nicho || "")}</td>
+            <td>${escapeHTML(d.caixa || "")}</td>
+            <td>${escapeHTML(d.partNumber || "")}</td>
+            <td>${escapeHTML(d.codigoECT || "")}</td>
+            <td class="truncate" title="${escapeHTML(d.descricao1 || "")}">${escapeHTML(d.descricao1 || "")}</td>
+            <td class="truncate" title="${escapeHTML(d.descricao2 || "")}">${escapeHTML(d.descricao2 || "")}</td>
+            <td>${escapeHTML(d.local1 || "")}</td>
+            <td>${escapeHTML(d.local2 || "")}</td>
+            <td>${d.qtdEstoque ?? ""}</td>
+            <td>${d.qtdInstalada ?? ""}</td>
+            <td>${d.estoqueMinimo ?? ""}</td>
+            <td>${escapeHTML(d.criticidade || "")}</td>
+            <td>${fmtBRL(d.custoUnitario)}</td>
+            <td>${d.tempoReposicao ?? ""}</td>
+            <td class="truncate" title="${escapeHTML(d.especificacoes || "")}">${escapeHTML(d.especificacoes || "")}</td>
+            <td class="truncate" title="${escapeHTML(d.fornecedor1 || "")}">${escapeHTML(d.fornecedor1 || "")}</td>
+            <td class="truncate" title="${escapeHTML(d.fornecedor2 || "")}">${escapeHTML(d.fornecedor2 || "")}</td>
+            <td class="truncate" title="${escapeHTML(d.fornecedor3 || "")}">${escapeHTML(d.fornecedor3 || "")}</td>
+            <td class="d-flex gap-1">
+              <button class="btn btn-primary btn-sm" onclick="prepareEdit('${docSnap.id}', '${dataString}')">Editar</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}', '${encodeURIComponent(d.imagePath || "")}')">Excluir</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    // --- EXCLUIR / PESQUISAR / EXPORTAR CSV ---
+    window.deleteItem = async (id, encImagePath) => {
+      if (!confirm("Excluir definitivamente?")) return;
+      const imagePath = decodeURIComponent(encImagePath || "");
+      try {
+        await deleteDoc(doc(db, 'pecas_estoque', id));
+        if (imagePath) {
+          try { await deleteObject(sRef(storage, imagePath)); } catch {}
+        }
+      } catch (e) {
+        alert("Erro ao excluir: " + e.message);
+      }
+    };
+
+    window.search = (input, tableId) => {
+      const filter = input.value.toLowerCase();
+      document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+      });
+    };
+
+    window.exportToCSV = async () => {
+      const qSnap = await getDocs(query(collection(db, 'pecas_estoque'), orderBy("timestamp", "desc")));
+      if (qSnap.empty) return alert("Sem dados para exportar.");
+      let csv = "\uFEFF" +
+        [
+          "Nicho","Caixa","Part Number","Código ECT","Descrição 1","Descrição 2",
+          "Local 1","Local 2","Qtd. Estoque","Qtd. Instalada","Estoque Mínimo",
+          "Criticidade","Custo Unitário","Tempo Reposição (dias)","Especificações Técnicas",
+          "Fornecedor 1","Fornecedor 2","Fornecedor 3","Imagem URL"
+        ].join(";") + "\n";
+
+      qSnap.forEach(doc => {
+        const d = doc.data();
+        const row = [
+          d.nicho || "", d.caixa || "", d.partNumber || "", d.codigoECT || "",
+          d.descricao1 || "", d.descricao2 || "",
+          d.local1 || "", d.local2 || "",
+          d.qtdEstoque ?? "", d.qtdInstalada ?? "", d.estoqueMinimo ?? "",
+          d.criticidade || "", d.custoUnitario ?? "", d.tempoReposicao ?? "",
+          (d.especificacoes || "").replaceAll("\n"," ").replaceAll(";", ","),
+          (d.fornecedor1 || "").replaceAll("\n"," ").replaceAll(";", ","),
+          (d.fornecedor2 || "").replaceAll("\n"," ").replaceAll(";", ","),
+          (d.fornecedor3 || "").replaceAll("\n"," ").replaceAll(";", ","),
+          d.imageURL || ""
+        ].map(v => `"${(v ?? "").toString().replaceAll('"','""')}"`).join(";");
+        csv += row + "\n";
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `pecas_estoque.csv`;
+      link.click();
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
