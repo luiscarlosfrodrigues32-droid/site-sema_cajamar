@@ -153,6 +153,10 @@ header {
 .stat-card.arquivos a { background-color: #ae6d7d; }
 .stat-card.arquivos a:hover { background-color: #ae6d7d; }
 
+.stat-card.unicorreios { border-top: 6px solid #ffe586; }
+.stat-card.unicorreios a { background-color: #ffe586; }
+.stat-card.unicorreios a:hover { background-color: #ffe586; }
+
 /* Estilização da Seção de Padrões O.S */
 .card-interno {
     background: white;
