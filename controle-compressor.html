@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Monitoramento - Compressores</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    :root { --primary-color: #2c3e50; --secondary-color: #34495e; }
+    body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .login-container { max-width: 400px; margin: 100px auto; }
+    #app-content { display: none; padding: 20px; }
+
+    .nav-tabs { border-bottom: 2px solid #dee2e6; margin-bottom: 20px; }
+    .nav-tabs .nav-link { color: var(--secondary-color); font-weight: 600; border: none; padding: 12px 20px; }
+    .nav-tabs .nav-link.active { border-bottom: 3px solid #0d6efd; color: #0d6efd; background: transparent; }
+
+    .table-container { background: white; border-radius: 0 0 8px 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: none; }
+    .btn-add { height: 38px; font-weight: bold; }
+    .editing-mode { background-color: #fff3cd !important; border: 2px solid #ffca2c !important; }
+    .truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-indicator { font-size: 0.9rem; padding: 5px 15px; border-radius: 20px; background: #e9ecef; }
+
+    /* Estilo para a caixa de serviços */
+    .services-grid { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; max-height: 220px; overflow-y: auto; }
+    .badge-service { background-color: #e2eafc; color: #1d3557; font-size: 0.75rem; margin: 2px; padding: 5px 8px; border-radius: 4px; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <div id="auth-section" class="login-container">
+    <div class="card shadow border-0">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4">Acesso Compressores</h3>
+        <div class="mb-3">
+          <label class="form-label">E-mail</label>
+          <input type="email" id="login-email" class="form-control" placeholder="usuario@empresa.com"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="******"/>
+        </div>
+        <button class="btn btn-primary w-100" id="btn-login">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-content" class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fw-bold text-dark m-0">Registro de Operação</h2>
+      <div class="d-flex align-items-center gap-3">
+        <span class="status-indicator">Ativo: <strong id="current-tab-label">Compressor 1 GO</strong></span>
+        <span id="user-display" class="text-muted small"></span>
+        <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="compressorTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" onclick="switchTab('C1GO', 'Compressor 1 GO')">Compressor 1 GO</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="switchTab('C2GO', 'Compressor 2 GO')">Compressor 2 GO</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="switchTab('C1PO', 'Compressor 1 PO')">Compressor 1 PO</button></li>
+      <li class="nav-item"><button class="nav-link" onclick="switchTab('C2PO', 'Compressor 2 PO')">Compressor 2 PO</button></li>
+    </ul>
+
+    <div class="table-container">
+      <div class="row g-2 mb-4" id="form-compressor">
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Data</label>
+          <input type="date" id="f-ra-data" class="form-control"/>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Horas de Trabalho</label>
+          <input type="text" id="f-ra-horas" class="form-control" placeholder="Ex: 1250h"/>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Temp. Amb. (°C)</label>
+          <input type="number" id="f-ra-tempAmbiente" class="form-control"/>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Temp. Comp. (°C)</label>
+          <input type="number" id="f-ra-tempCompressor" class="form-control"/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Executante</label>
+          <input type="text" id="f-ra-executante" class="form-control" placeholder="Nome"/>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small text-muted fw-bold">Serviços Realizados</label>
+          <div class="services-grid" id="f-ra-servicos-container">
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do filtro de ar"><label class="form-check-label small">Troca do filtro de ar</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do filtro separador ar/óleo"><label class="form-check-label small">Troca do filtro separador ar/óleo</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do filtro de óleo"><label class="form-check-label small">Troca do filtro de óleo</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do filtro de ar 1 micro"><label class="form-check-label small">Troca do filtro de ar 1 micro</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do filtro de ar 0,01 micro"><label class="form-check-label small">Troca do filtro de ar 0,01 micro</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do sensor de temperatura KTY"><label class="form-check-label small">Troca do sensor de temperatura KTY</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do sensor NTC capsula inox"><label class="form-check-label small">Troca do sensor NTC capsula inox</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Troca do óleo"><label class="form-check-label small">Troca do óleo</label></div>
+              <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Completado o nível do óleo"><label class="form-check-label small">Completado o nível do óleo</label></div>
+              <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Resetado os contadores de horas"><label class="form-check-label small">Resetado os contadores de horas</label></div>
+            <div class="form-check"><input class="form-check-input chk-servico" type="checkbox" value="Realizado a limpeza"><label class="form-check-label small">Realizado a limpeza</label></div>
+            <div class="form-check">
+              <input class="form-check-input chk-servico" type="checkbox" value="Outros" id="chk-outros" onchange="toggleOutrosEspecificar()">
+              <label class="form-check-label small">Outros (Especificar)</label>
+            </div>
+            <input type="text" id="f-ra-outros-especificar" class="form-control form-control-sm mt-1 d-none" placeholder="Quais outros serviços?" />
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small text-muted">Observação</label>
+          <textarea id="f-ra-observacao" class="form-control" rows="8" placeholder="Notas adicionais..."></textarea>
+        </div>
+
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button class="btn btn-success btn-add" id="btn-save" onclick="saveData()">Salvar Registro</button>
+          <button class="btn btn-secondary btn-sm d-none" id="btn-cancel-edit" onclick="cancelEdit()">✖ Cancelar Edição</button>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="header-actions d-flex justify-content-between mb-3">
+        <input type="text" class="form-control w-50" id="search-input" placeholder="Pesquisar nesta aba..." onkeyup="searchTable()"/>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportCSV()">📥 Exportar CSV (Aba Atual)</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="main-table">
+          <thead class="table-light">
+            <tr>
+              <th>Data</th>
+              <th>Horas</th>
+              <th>T. Amb</th>
+              <th>T. Comp</th>
+              <th style="width: 30%;">Serviços Realizados</th>
+              <th>Observação</th>
+              <th>Executante</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyDGJdA5eTJJA9IloEJmYWsFOVf6sgT2U_g",
+  authDomain: "controle-compressor-a94cf.firebaseapp.com",
+  projectId: "controle-compressor-a94cf",
+  storageBucket: "controle-compressor-a94cf.firebasestorage.app",
+  messagingSenderId: "698960972140",
+  appId: "1:698960972140:web:a7a8a7daf7b5f42b3fcb49",
+  measurementId: "G-4LBLH97CNL"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentCompressor = 'C1GO';
+    let unsubscribe = null;
+    let editMode = { active: false, id: null };
+
+    // Campos tradicionais de input (excluindo os checkboxes que têm lógica própria)
+    const textFields = ['f-ra-data', 'f-ra-horas', 'f-ra-tempAmbiente', 'f-ra-tempCompressor', 'f-ra-observacao', 'f-ra-executante'];
+
+    window.toggleOutrosEspecificar = () => {
+      const chkOutros = document.getElementById('chk-outros');
+      const inputEspecificar = document.getElementById('f-ra-outros-especificar');
+      if(chkOutros.checked) {
+        inputEspecificar.classList.remove('d-none');
+      } else {
+        inputEspecificar.classList.add('d-none');
+        inputEspecificar.value = "";
+      }
+    };
+
+    window.switchTab = (id, label) => {
+      currentCompressor = id;
+      document.getElementById('current-tab-label').innerText = label;
+      document.querySelectorAll('.nav-link').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.innerText === label) btn.classList.add('active');
+      });
+      cancelEdit();
+      initSync();
+    };
+
+    // --- AUTENTICAÇÃO ---
+    document.getElementById('btn-login').addEventListener('click', () => {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Falha no login: " + err.message));
+    });
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        document.getElementById('user-display').innerText = user.email;
+        initSync();
+      } else {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-content').style.display = 'none';
+      }
+    });
+
+    // --- SINCRONISMO EM TEMPO REAL ---
+    function initSync() {
+      if (unsubscribe) unsubscribe();
+
+      const q = query(
+        collection(db, "registros_compressores"),
+        where("compressorId", "==", currentCompressor),
+        orderBy("timestamp", "desc")
+      );
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const row = document.createElement('tr');
+          const dataJson = encodeURIComponent(JSON.stringify(data));
+
+          // Renderiza a lista de serviços como pequenas Badges visuais na tabela
+          let servicosHTML = "";
+          if (Array.isArray(data.servicos)) {
+            data.servicos.forEach(s => {
+              servicosHTML += `<span class="badge-service">${s}</span>`;
+            });
+          } else {
+            servicosHTML = data.servicos || "";
+          }
+
+          row.innerHTML = `
+            <td>${formatDateBR(data.data)}</td>
+            <td>${data.horas}</td>
+            <td>${data.tempAmbiente}°C</td>
+            <td>${data.tempCompressor}°C</td>
+            <td>${servicosHTML}</td>
+            <td class="truncate" title="${data.observacao}">${data.observacao}</td>
+            <td>${data.executante}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="btn btn-primary btn-sm" onclick="prepareEdit('${docSnap.id}', '${dataJson}')">Editar</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}')">Excluir</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    // --- SALVAR / ATUALIZAR ---
+    window.saveData = async () => {
+      let payload = {
+        timestamp: Date.now(),
+        compressorId: currentCompressor
+      };
+
+      let hasError = false;
+
+      // 1. Validar campos comuns
+      textFields.forEach(id => {
+        const el = document.getElementById(id);
+        const val = el.value.trim();
+        if(!val && id !== 'f-ra-observacao') {
+          el.classList.add('is-invalid');
+          hasError = true;
+        } else {
+          el.classList.remove('is-invalid');
+          const key = id.replace('f-ra-', '');
+          payload[key] = val;
+        }
+      });
+
+      // 2. Coletar os Checkboxes Marcados
+      let servicosSelecionados = [];
+      document.querySelectorAll('.chk-servico:checked').forEach(chk => {
+        if(chk.value === "Outros") {
+          const textOutros = document.getElementById('f-ra-outros-especificar').value.trim();
+          if(textOutros) servicosSelecionados.push(`Outros: ${textOutros}`);
+          else servicosSelecionados.push("Outros");
+        } else {
+          servicosSelecionados.push(chk.value);
+        }
+      });
+
+      if(servicosSelecionados.length === 0) {
+        alert("Por favor, marque pelo menos um Serviço Realizado!");
+        return;
+      }
+      payload['servicos'] = servicosSelecionados; // Array gravado no banco
+
+      if(hasError) return alert("Preencha os campos obrigatórios.");
+
+      try {
+        if(editMode.active) {
+          await updateDoc(doc(db, "registros_compressores", editMode.id), payload);
+          alert("Registro atualizado!");
+          cancelEdit();
+        } else {
+          await addDoc(collection(db, "registros_compressores"), payload);
+          // limpar dados (exceto data e checkboxes)
+          textFields.forEach(id => { if(id !== 'f-ra-data') document.getElementById(id).value = "" });
+          resetCheckboxes();
+          alert("Salvo com sucesso!");
+        }
+      } catch (e) { alert("Erro: " + e.message); }
+    };
+
+    // --- FUNÇÕES AUXILIARES ---
+    window.prepareEdit = (id, dataJson) => {
+      const data = JSON.parse(decodeURIComponent(dataJson));
+      editMode = { active: true, id: id };
+
+      // Reseta inputs e estilos antes
+      resetCheckboxes();
+
+      // Alimenta campos de texto
+      textFields.forEach(id => {
+        const key = id.replace('f-ra-', '');
+        document.getElementById(id).value = data[key] || "";
+        document.getElementById(id).classList.add('editing-mode');
+      });
+
+      // Marcar os Checkboxes corretos vindos do banco
+      if (Array.isArray(data.servicos)) {
+        data.servicos.forEach(s => {
+          if(s.startsWith("Outros:")) {
+            document.getElementById('chk-outros').checked = true;
+            const inputEspecificar = document.getElementById('f-ra-outros-especificar');
+            inputEspecificar.classList.remove('d-none');
+            inputEspecificar.value = s.replace("Outros: ", "");
+          } else {
+            // Procura o checkbox pelo valor exato
+            const chk = Array.from(document.querySelectorAll('.chk-servico')).find(c => c.value === s);
+            if(chk) chk.checked = true;
+          }
+        });
+      }
+
+      document.getElementById('btn-save').innerText = "Atualizar Registro";
+      document.getElementById('btn-cancel-edit').classList.remove('d-none');
+    };
+
+    window.cancelEdit = () => {
+      editMode = { active: false, id: null };
+      textFields.forEach(id => {
+        document.getElementById(id).value = "";
+        document.getElementById(id).classList.remove('editing-mode', 'is-invalid');
+      });
+      resetCheckboxes();
+      document.getElementById('f-ra-data').value = getToday();
+      document.getElementById('btn-save').innerText = "Salvar Registro";
+      document.getElementById('btn-cancel-edit').classList.add('d-none');
+    };
+
+    function resetCheckboxes() {
+      document.querySelectorAll('.chk-servico').forEach(c => c.checked = false);
+      const inputEspecificar = document.getElementById('f-ra-outros-especificar');
+      inputEspecificar.classList.add('d-none');
+      inputEspecificar.value = "";
+    }
+
+    window.deleteItem = async (id) => {
+      if(confirm("Deseja excluir este registro?")) {
+        await deleteDoc(doc(db, "registros_compressores", id));
+      }
+    };
+
+    window.searchTable = () => {
+      const val = document.getElementById('search-input').value.toLowerCase();
+      document.querySelectorAll('#table-body tr').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+      });
+    };
+
+    window.exportCSV = async () => {
+      const q = query(collection(db, "registros_compressores"), where("compressorId", "==", currentCompressor));
+      const snap = await getDocs(q);
+      let csv = "\uFEFFData;Horas;Temp Ambiente;Temp Compressor;Serviços Realizados;Observação;Executante\n";
+      snap.forEach(d => {
+        const v = d.data();
+        // Une a lista de array com vírgulas para caber na célula do CSV
+        const servs = Array.isArray(v.servicos) ? v.servicos.join(', ') : (v.servicos || "");
+        csv += `${v.data};${v.horas};${v.tempAmbiente};${v.tempCompressor};"${servs}";"${v.observacao}";${v.executante}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Relatorio_${currentCompressor}.csv`;
+      link.click();
+    };
+
+    function formatDateBR(dateStr) {
+      if(!dateStr) return "";
+      const [y, m, d] = dateStr.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function getToday() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    document.getElementById('f-ra-data').value = getToday();
+  </script>
+</body>
+</html>
