@@ -417,8 +417,15 @@
       for (let i = 0; i < fieldIds.length; i++) {
         const el = document.getElementById(fieldIds[i]);
         const key = fieldKeys[i];
-        const val = data[key];
 
+        // ADICIONE ESTA VERIFICAÇÃO:
+        // Se for campo de O.S ou Executante, deixa em branco e pula
+        if (key === 'os' || key === 'executante') {
+          el.value = "";
+          continue;
+        }
+
+        const val = data[key];
         if (numericFields.has(key)) {
           el.value = (val ?? "") === null ? "" : val;
         } else {
