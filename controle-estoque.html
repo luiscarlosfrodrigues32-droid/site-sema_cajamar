@@ -146,6 +146,21 @@
           <input type="text" id="f-pe-fornecedor3" class="form-control" placeholder="Nome / contato">
         </div>
 
+        <!-- Seção de Rastreabilidade / Atualização -->
+        <div class="col-12"><div class="form-section-title text-primary">Informações de Atualização (O.S. / Executante)</div></div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Número da O.S.</label>
+          <input type="text" id="f-pe-os" class="form-control" placeholder="Ex.: OS-9876">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Executante</label>
+          <input type="text" id="f-pe-executante" class="form-control" placeholder="Nome do técnico">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small text-muted">Data da Alteração</label>
+          <input type="date" id="f-pe-dataalteracao" class="form-control">
+        </div>
+
         <div class="col-12"><div class="form-section-title">Imagem da Peça</div></div>
         <div class="col-md-6">
           <label class="form-label small text-muted">Upload (JPG/PNG)</label>
@@ -175,7 +190,11 @@
         <table class="table table-hover align-middle" id="t-pe">
           <thead>
             <tr>
+              <th style="min-width:140px">Ações</th>
               <th>Imagem</th>
+              <th>O.S.</th>
+              <th>Executante</th>
+              <th>Data Alteração</th>
               <th>Nicho</th>
               <th>Caixa</th>
               <th>Part Number</th>
@@ -194,7 +213,6 @@
               <th>Fornecedor 1</th>
               <th>Fornecedor 2</th>
               <th>Fornecedor 3</th>
-              <th style="min-width:140px">Ações</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -214,14 +232,14 @@
 
     // 1) Substitua pelos dados do seu projeto Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyBmbe7Vr5VuU-NbzeiVSZYJJYWdoQnDCfk",
-  authDomain: "controle-estoque-sema.firebaseapp.com",
-  projectId: "controle-estoque-sema",
-  storageBucket: "controle-estoque-sema.firebasestorage.app",
-  messagingSenderId: "149322140692",
-  appId: "1:149322140692:web:8ea4bf3718c52eea9eab01",
-  measurementId: "G-EYR2W1XBPN"
-};
+      apiKey: "AIzaSyBmbe7Vr5VuU-NbzeiVSZYJJYWdoQnDCfk",
+      authDomain: "controle-estoque-sema.firebaseapp.com",
+      projectId: "controle-estoque-sema",
+      storageBucket: "controle-estoque-sema.firebasestorage.app",
+      messagingSenderId: "149322140692",
+      appId: "1:149322140692:web:8ea4bf3718c52eea9eab01",
+      measurementId: "G-EYR2W1XBPN"
+    };
 
     // Inicialização Firebase
     const app = initializeApp(firebaseConfig);
@@ -232,7 +250,7 @@
     // Estado de edição
     let editMode = { active: false, id: null, type: null, currentImagePath: null };
 
-    // Mapeamento dos campos (exceto o file)
+    // Mapeamento dos campos (incluindo OS, Executante e Data de Alteração)
     const fieldIds = [
       'f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-codigoect',
       'f-pe-descricao1','f-pe-descricao2',
@@ -240,7 +258,8 @@
       'f-pe-qtdestoque','f-pe-qtdinstalada','f-pe-estoquemin',
       'f-pe-criticidade','f-pe-custounitario','f-pe-temporeposicao',
       'f-pe-especificacoes',
-      'f-pe-fornecedor1','f-pe-fornecedor2','f-pe-fornecedor3'
+      'f-pe-fornecedor1','f-pe-fornecedor2','f-pe-fornecedor3',
+      'f-pe-os', 'f-pe-executante', 'f-pe-dataalteracao'
     ];
 
     // Chaves Firestore na mesma ordem
@@ -251,7 +270,8 @@
       'qtdEstoque','qtdInstalada','estoqueMinimo',
       'criticidade','custoUnitario','tempoReposicao',
       'especificacoes',
-      'fornecedor1','fornecedor2','fornecedor3'
+      'fornecedor1','fornecedor2','fornecedor3',
+      'os', 'executante', 'dataAlteracao'
     ];
 
     const numericFields = new Set(['qtdEstoque','qtdInstalada','estoqueMinimo','custoUnitario','tempoReposicao']);
@@ -275,6 +295,14 @@
       try {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
       } catch { return n.toString(); }
+    };
+
+    // Formatar data YYYY-MM-DD para DD/MM/YYYY na tabela
+    const fmtDate = (dStr) => {
+      if (!dStr) return "";
+      const parts = dStr.split("-");
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dStr;
     };
 
     // Pré-visualização da imagem
@@ -314,18 +342,15 @@
 
     // --- SALVAR/ATUALIZAR DADOS ---
     window.saveData = async () => {
-      // Validação mínima (campos-chave)
       const requiredIds = ['f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-descricao1'];
       let hasError = false;
 
-      // Monta payload
       const payload = { timestamp: Date.now() };
       for (let i = 0; i < fieldIds.length; i++) {
         const el = document.getElementById(fieldIds[i]);
         const key = fieldKeys[i];
         const raw = (el.value || "").toString().trim();
 
-        // Regras de required
         if (requiredIds.includes(fieldIds[i]) && !raw) {
           el.classList.add('is-invalid'); hasError = true; continue;
         } else {
@@ -340,7 +365,6 @@
       }
       if (hasError) return alert("Preencha os campos obrigatórios marcados com *.");
 
-      // Upload de imagem (se houver)
       const file = fileInput.files?.[0];
       try {
         let imageURL = null;
@@ -356,24 +380,20 @@
         }
 
         if (editMode.active) {
-          // Se houver nova imagem e existir imagem anterior, remove a antiga
           if (file && editMode.currentImagePath) {
             try { await deleteObject(sRef(storage, editMode.currentImagePath)); } catch {}
           }
 
-          // Atualiza doc
           const update = { ...payload };
           if (file) { update.imageURL = imageURL; update.imagePath = imagePath; }
           await updateDoc(doc(db, 'pecas_estoque', editMode.id), update);
           alert("Peça atualizada com sucesso!");
           cancelEdit();
         } else {
-          // Cria doc
           const create = { ...payload };
           if (file) { create.imageURL = imageURL; create.imagePath = imagePath; }
           await addDoc(collection(db, 'pecas_estoque'), create);
 
-          // Limpa formulário
           fieldIds.forEach((id, i) => {
             const el = document.getElementById(id);
             el.value = "";
@@ -394,7 +414,6 @@
       const data = JSON.parse(decodeURIComponent(dataJson));
       editMode = { active: true, id, type: 'pecas_estoque', currentImagePath: data.imagePath || null };
 
-      // Popular campos
       for (let i = 0; i < fieldIds.length; i++) {
         const el = document.getElementById(fieldIds[i]);
         const key = fieldKeys[i];
@@ -408,7 +427,10 @@
         el.classList.add('editing-mode');
       }
 
-      // Preview imagem existente
+      // Preenche automaticamente a data de alteração com a data atual ao entrar no modo de edição (opcional, facilita para o usuário)
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('f-pe-dataalteracao').value = today;
+
       previewBox.innerHTML = "";
       fileInput.value = "";
       if (data.imageURL) {
@@ -458,7 +480,14 @@
             : `<span class="text-muted small">sem imagem</span>`;
 
           row.innerHTML = `
+            <td class="d-flex gap-1">
+              <button class="btn btn-primary btn-sm" onclick="prepareEdit('${docSnap.id}', '${dataString}')">Editar</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}', '${encodeURIComponent(d.imagePath || "")}')">Excluir</button>
+            </td>
             <td>${imgCell}</td>
+            <td><strong>${escapeHTML(d.os || "")}</strong></td>
+            <td>${escapeHTML(d.executante || "")}</td>
+            <td>${fmtDate(d.dataAlteracao || "")}</td>
             <td>${escapeHTML(d.nicho || "")}</td>
             <td>${escapeHTML(d.caixa || "")}</td>
             <td>${escapeHTML(d.partNumber || "")}</td>
@@ -477,10 +506,6 @@
             <td class="truncate" title="${escapeHTML(d.fornecedor1 || "")}">${escapeHTML(d.fornecedor1 || "")}</td>
             <td class="truncate" title="${escapeHTML(d.fornecedor2 || "")}">${escapeHTML(d.fornecedor2 || "")}</td>
             <td class="truncate" title="${escapeHTML(d.fornecedor3 || "")}">${escapeHTML(d.fornecedor3 || "")}</td>
-            <td class="d-flex gap-1">
-              <button class="btn btn-primary btn-sm" onclick="prepareEdit('${docSnap.id}', '${dataString}')">Editar</button>
-              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}', '${encodeURIComponent(d.imagePath || "")}')">Excluir</button>
-            </td>
           `;
           tbody.appendChild(row);
         });
@@ -513,7 +538,7 @@
       if (qSnap.empty) return alert("Sem dados para exportar.");
       let csv = "\uFEFF" +
         [
-          "Nicho","Caixa","Part Number","Código ECT","Descrição 1","Descrição 2",
+          "O.S.","Executante","Data Alteração","Nicho","Caixa","Part Number","Código ECT","Descrição 1","Descrição 2",
           "Local 1","Local 2","Qtd. Estoque","Qtd. Instalada","Estoque Mínimo",
           "Criticidade","Custo Unitário","Tempo Reposição (dias)","Especificações Técnicas",
           "Fornecedor 1","Fornecedor 2","Fornecedor 3","Imagem URL"
@@ -522,6 +547,7 @@
       qSnap.forEach(doc => {
         const d = doc.data();
         const row = [
+          d.os || "", d.executante || "", d.dataAlteracao || "",
           d.nicho || "", d.caixa || "", d.partNumber || "", d.codigoECT || "",
           d.descricao1 || "", d.descricao2 || "",
           d.local1 || "", d.local2 || "",
