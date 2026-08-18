@@ -434,9 +434,12 @@
         el.classList.add('editing-mode');
       }
 
-      // Preenche automaticamente a data de alteração com a data atual ao entrar no modo de edição (opcional, facilita para o usuário)
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('f-pe-dataalteracao').value = today;
+      // 4. Preenche a data com o dia de hoje (ISO format: YYYY-MM-DD)
+    const dataAlteracaoEl = document.getElementById('f-pe-dataalteracao');
+    if (dataAlteracaoEl) {
+        const today = new Date().toISOString().split('T')[0];
+        dataAlteracaoEl.value = today;
+    }
 
       previewBox.innerHTML = "";
       fileInput.value = "";
