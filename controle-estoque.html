@@ -10,7 +10,7 @@
     body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .login-container { max-width: 400px; margin: 100px auto; }
     #app-content { display: none; padding: 20px; }
-    .table-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .table-container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
     .btn-add { height: 38px; font-weight: bold; }
     .is-invalid { border-color: #dc3545 !important; }
     .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
@@ -51,6 +51,7 @@
       </div>
     </div>
 
+    <!-- SEÇÃO DE ESTOQUE -->
     <div class="table-container">
       <!-- FORMULÁRIO -->
       <div class="row g-3 mb-4" id="form-pecas_estoque">
@@ -218,19 +219,40 @@
           <tbody></tbody>
         </table>
       </div>
-
     </div>
+
+    <!-- SEÇÃO DE LOGS DE ATUALIZAÇÕES -->
+    <div class="table-container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-secondary m-0">📋 Log de Auditoria / Atualizações</h4>
+        <input type="text" class="form-control w-25" placeholder="Pesquisar no log..." onkeyup="search(this, 't-logs')"/>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle small" id="t-logs">
+          <thead>
+            <tr>
+              <th>Data/Hora do Log</th>
+              <th>Usuário Sistema</th>
+              <th>Ação</th>
+              <th>Part Number</th>
+              <th>O.S.</th>
+              <th>Executante</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <!-- FIREBASE + APP SCRIPT -->
   <script type="module">
-    // Firebase (CDN módulos)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    // 1) Substitua pelos dados do seu projeto Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBmbe7Vr5VuU-NbzeiVSZYJJYWdoQnDCfk",
       authDomain: "controle-estoque-sema.firebaseapp.com",
@@ -241,16 +263,13 @@
       measurementId: "G-EYR2W1XBPN"
     };
 
-    // Inicialização Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
 
-    // Estado de edição
     let editMode = { active: false, id: null, type: null, currentImagePath: null };
 
-    // Mapeamento dos campos (incluindo OS, Executante e Data de Alteração)
     const fieldIds = [
       'f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-codigoect',
       'f-pe-descricao1','f-pe-descricao2',
@@ -262,7 +281,6 @@
       'f-pe-os', 'f-pe-executante', 'f-pe-dataalteracao'
     ];
 
-    // Chaves Firestore na mesma ordem
     const fieldKeys = [
       'nicho','caixa','partNumber','codigoECT',
       'descricao1','descricao2',
@@ -276,7 +294,6 @@
 
     const numericFields = new Set(['qtdEstoque','qtdInstalada','estoqueMinimo','custoUnitario','tempoReposicao']);
 
-    // Utilitário para escapar HTML
     const escapeHTML = (str = "") => str.toString()
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
@@ -297,7 +314,6 @@
       } catch { return n.toString(); }
     };
 
-    // Formatar data YYYY-MM-DD para DD/MM/YYYY na tabela
     const fmtDate = (dStr) => {
       if (!dStr) return "";
       const parts = dStr.split("-");
@@ -305,7 +321,29 @@
       return dStr;
     };
 
-    // Pré-visualização da imagem
+    const fmtDateTime = (timestamp) => {
+      if (!timestamp) return "";
+      const d = new Date(timestamp);
+      return d.toLocaleString('pt-BR');
+    };
+
+    // Função auxiliar para registrar logs no Firestore
+    async function registrarLog(acao, partNumber, os, executante) {
+      try {
+        const userEmail = auth.currentUser ? auth.currentUser.email : "Desconhecido";
+        await addDoc(collection(db, 'logs_pecas'), {
+          timestamp: Date.now(),
+          usuario: userEmail,
+          acao: acao, // "Criação", "Atualização" ou "Exclusão"
+          partNumber: partNumber || "",
+          os: os || "",
+          executante: executante || ""
+        });
+      } catch (e) {
+        console.error("Erro ao gravar log: ", e);
+      }
+    }
+
     const fileInput = document.getElementById('f-pe-imagem');
     const previewBox = document.getElementById('img-preview');
     fileInput.addEventListener('change', () => {
@@ -318,7 +356,6 @@
       previewBox.appendChild(img);
     });
 
-    // --- AUTENTICAÇÃO ---
     document.getElementById('btn-login').addEventListener('click', () => {
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-pass').value.trim();
@@ -340,7 +377,6 @@
       }
     });
 
-    // --- SALVAR/ATUALIZAR DADOS ---
     window.saveData = async () => {
       const requiredIds = ['f-pe-nicho','f-pe-caixa','f-pe-partnumber','f-pe-descricao1'];
       let hasError = false;
@@ -387,12 +423,19 @@
           const update = { ...payload };
           if (file) { update.imageURL = imageURL; update.imagePath = imagePath; }
           await updateDoc(doc(db, 'pecas_estoque', editMode.id), update);
+
+          // Registra log de Atualização
+          await registrarLog("Atualização", payload.partNumber, payload.os, payload.executante);
+
           alert("Peça atualizada com sucesso!");
           cancelEdit();
         } else {
           const create = { ...payload };
           if (file) { create.imageURL = imageURL; create.imagePath = imagePath; }
           await addDoc(collection(db, 'pecas_estoque'), create);
+
+          // Registra log de Criação
+          await registrarLog("Criação", payload.partNumber, payload.os, payload.executante);
 
           fieldIds.forEach((id, i) => {
             const el = document.getElementById(id);
@@ -409,7 +452,6 @@
       }
     };
 
-    // --- PREPARAR EDIÇÃO ---
     window.prepareEdit = (id, dataJson) => {
       const data = JSON.parse(decodeURIComponent(dataJson));
       editMode = { active: true, id, type: 'pecas_estoque', currentImagePath: data.imagePath || null };
@@ -418,8 +460,6 @@
         const el = document.getElementById(fieldIds[i]);
         const key = fieldKeys[i];
 
-        // ADICIONE ESTA VERIFICAÇÃO:
-        // Se for campo de O.S ou Executante, deixa em branco e pula
         if (key === 'os' || key === 'executante') {
           el.value = "";
           continue;
@@ -434,12 +474,11 @@
         el.classList.add('editing-mode');
       }
 
-      // 4. Preenche a data com o dia de hoje (ISO format: YYYY-MM-DD)
-    const dataAlteracaoEl = document.getElementById('f-pe-dataalteracao');
-    if (dataAlteracaoEl) {
+      const dataAlteracaoEl = document.getElementById('f-pe-dataalteracao');
+      if (dataAlteracaoEl) {
         const today = new Date().toISOString().split('T')[0];
         dataAlteracaoEl.value = today;
-    }
+      }
 
       previewBox.innerHTML = "";
       fileInput.value = "";
@@ -457,7 +496,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // --- CANCELAR EDIÇÃO ---
     window.cancelEdit = () => {
       if (!editMode.type) return;
       for (const id of fieldIds) {
@@ -475,8 +513,8 @@
       editMode = { active: false, id: null, type: null, currentImagePath: null };
     };
 
-    // --- LISTAGEM EM TEMPO REAL ---
     function initRealtimeSync() {
+      // Sincronia de Peças
       onSnapshot(query(collection(db, 'pecas_estoque'), orderBy("timestamp", "desc")), (snapshot) => {
         const tbody = document.querySelector(`#t-pe tbody`);
         tbody.innerHTML = "";
@@ -492,7 +530,7 @@
           row.innerHTML = `
             <td class="d-flex gap-1">
               <button class="btn btn-primary btn-sm" onclick="prepareEdit('${docSnap.id}', '${dataString}')">Editar</button>
-              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}', '${encodeURIComponent(d.imagePath || "")}')">Excluir</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteItem('${docSnap.id}', '${encodeURIComponent(d.imagePath || "")}', '${escapeHTML(d.partNumber || "")}', '${escapeHTML(d.os || "")}', '${escapeHTML(d.executante || "")}')">Excluir</button>
             </td>
             <td>${imgCell}</td>
             <td><strong>${escapeHTML(d.os || "")}</strong></td>
@@ -520,10 +558,34 @@
           tbody.appendChild(row);
         });
       });
+
+      // Sincronia de Logs
+      onSnapshot(query(collection(db, 'logs_pecas'), orderBy("timestamp", "desc")), (snapshot) => {
+        const tbodyLogs = document.querySelector(`#t-logs tbody`);
+        tbodyLogs.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const l = docSnap.data();
+          const row = document.createElement('tr');
+
+          let badgeClass = "bg-secondary";
+          if (l.acao === "Criação") badgeClass = "bg-success";
+          if (l.acao === "Atualização") badgeClass = "bg-primary";
+          if (l.acao === "Exclusão") badgeClass = "bg-danger";
+
+          row.innerHTML = `
+            <td>${fmtDateTime(l.timestamp)}</td>
+            <td>${escapeHTML(l.usuario || "")}</td>
+            <td><span class="badge ${badgeClass}">${escapeHTML(l.acao || "")}</span></td>
+            <td><strong>${escapeHTML(l.partNumber || "")}</strong></td>
+            <td>${escapeHTML(l.os || "-")}</td>
+            <td>${escapeHTML(l.executante || "-")}</td>
+          `;
+          tbodyLogs.appendChild(row);
+        });
+      });
     }
 
-    // --- EXCLUIR / PESQUISAR / EXPORTAR CSV ---
-    window.deleteItem = async (id, encImagePath) => {
+    window.deleteItem = async (id, encImagePath, partNumber, os, executante) => {
       if (!confirm("Excluir definitivamente?")) return;
       const imagePath = decodeURIComponent(encImagePath || "");
       try {
@@ -531,6 +593,8 @@
         if (imagePath) {
           try { await deleteObject(sRef(storage, imagePath)); } catch {}
         }
+        // Registra log de Exclusão
+        await registrarLog("Exclusão", partNumber, os, executante);
       } catch (e) {
         alert("Erro ao excluir: " + e.message);
       }
