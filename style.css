@@ -122,7 +122,7 @@ header {
 .stat-card.contPO a:hover { background-color: #7249c5; }
 
 .stat-card.success { border-top: 6px solid #ffde23; }
-.stat-card.success a { background-color: #ffde23; color: #333; } /* Amarelo pede texto escuro */
+.stat-card.success a { background-color: #ffde23; } /* Amarelo pede texto escuro */
 .stat-card.success a:hover { background-color: #e5c71f; }
 
 .stat-card.rh24hs { border-top: 6px solid #ff710a; }
@@ -141,9 +141,9 @@ header {
 .stat-card.sei a { background-color: #807c93; }
 .stat-card.sei a:hover { background-color: #807c93; }
 
-.stat-card.bmg { border-top: 6px solid #ff9096; }
-.stat-card.bmg a { background-color: #ff9096; }
-.stat-card.bmg a:hover { background-color: #ff9096; }
+.stat-card.bmg { border-top: 6px solid #6a826c; }
+.stat-card.bmg a { background-color: #6a826c; }
+.stat-card.bmg a:hover { background-color: #6a826c; }
 
 .stat-card.outlook { border-top: 6px solid #91aeff; }
 .stat-card.outlook a { background-color: #91aeff; }
@@ -153,9 +153,17 @@ header {
 .stat-card.arquivos a { background-color: #ae6d7d; }
 .stat-card.arquivos a:hover { background-color: #ae6d7d; }
 
-.stat-card.unicorreios { border-top: 6px solid #ffe586; }
-.stat-card.unicorreios a { background-color: #ffe586; }
-.stat-card.unicorreios a:hover { background-color: #ffe586; }
+.stat-card.unicorreios { border-top: 6px solid #ffa681; }
+.stat-card.unicorreios a { background-color: #ffa681; }
+.stat-card.unicorreios a:hover { background-color: #ffa681; }
+
+.stat-card.ferias_2027 { border-top: 6px solid #ee82ee; }
+.stat-card.ferias_2027 a { background-color: #ee82ee; }
+.stat-card.ferias_2027 a:hover { background-color: #ee82ee; }
+
+.stat-card.controle_fogas { border-top: 6px solid #006400; }
+.stat-card.controle_fogas a { background-color: #006400; }
+.stat-card.controle_fogas a:hover { background-color: #006400; }
 
 /* Estilização da Seção de Padrões O.S */
 .card-interno {
